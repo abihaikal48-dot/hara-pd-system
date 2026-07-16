@@ -6,6 +6,23 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { KeyRound, Mail, AlertCircle, Loader2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
+// LOGO SVG MINIMALIS ELEGAN: REPRESENTASI MUTU & GROWTH PEOPLE DEVELOPMENT HARA [1]
+const LogoPD = () => (
+  <svg className="w-12 h-12 shadow-md animate-pulse" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 5L85 25V60C85 79.3 70.1 91.8 50 95C29.9 91.8 15 79.3 15 60V25L50 5Z" fill="url(#goldGrad)" />
+    <path d="M42 35C45 35 48 38 48 42C48 45 45 48 42 48C39 48 36 45 36 42C36 38 39 35 42 35Z" fill="#8E2A1F" />
+    <path d="M50 20C55 20 60 25 60 31C60 37 55 42 50 42C45 42 40 37 40 31C40 25 45 20 50 20Z" fill="#C0392B" />
+    <path d="M50 45L65 65H35L50 45Z" fill="#FFF" opacity="0.9" />
+    <path d="M50 60V80" stroke="#FFF" strokeWidth="4" strokeLinecap="round" />
+    <defs>
+      <linearGradient id="goldGrad" x1="15" y1="5" x2="85" y2="95" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFDD7A" />
+        <stop offset="100%" stop-color="#F4B400" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 export default function LoginPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -49,16 +66,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-brand-bg dark:bg-dark-bg flex flex-col lg:flex-row transition-colors duration-200">
       
-      {/* SISI KIRI: BRANDING & SOPHISTICATED COPY (HIDDEN ON MOBILE) */}
+      {/* SISI KIRI: BRANDING & SOPHISTICATED COPY */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#4A1810] via-brand-red-dark to-brand-red relative items-center justify-center p-12 text-white overflow-hidden animate-gradient-shift">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(244,180,0,0.15),transparent_50%)]" />
         <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full bg-brand-yellow/10 blur-3xl" />
         
         <div className="max-w-md space-y-6 z-10 relative">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FFDD7A] to-brand-yellow flex items-center justify-center font-black text-xl text-brand-red-dark shadow-xl">
-              H
-            </div>
+            <LogoPD />
             <div>
               <h2 className="font-extrabold text-sm leading-none tracking-widest uppercase text-brand-yellow">Hara Chicken</h2>
               <p className="text-[10px] opacity-80 uppercase tracking-[2px] mt-1 font-semibold">People Development</p>
@@ -99,8 +114,8 @@ export default function LoginPage() {
           
           {/* Header Mobile Brand */}
           <div className="text-center lg:text-left space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFDD7A] to-brand-yellow flex items-center justify-center font-black text-2xl text-brand-red-dark shadow-xl mx-auto lg:mx-0 mb-4">
-              H
+            <div className="flex justify-center lg:justify-start mb-4">
+              <LogoPD />
             </div>
             <h2 className="text-2xl font-black tracking-tight text-brand-ink dark:text-dark-ink">
               Masuk Log Sistem PD
