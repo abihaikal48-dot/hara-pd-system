@@ -56,10 +56,12 @@ const ENTITY_CONFIGS: Record<string, {
   kru: {
     table: 'kru',
     title: 'Master Kru',
-    desc: 'Kelola tim kerja penugasan. Pilih outlet penugasan di formulir tambah.',
+    desc: 'Kelola tim kerja penugasan. Pilih outlet penugasan di bawah.',
     fields: [
       { name: 'nama_kru', label: 'Nama Lengkap Kru', type: 'text' },
       { name: 'divisi', label: 'Divisi Tugas', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
+      { name: 'outlet_id', label: 'Outlet Penugasan', type: 'select' },
+      { name: 'tanggal_masuk', label: 'Tanggal Masuk', type: 'date' },
       { name: 'catatan', label: 'Catatan Kinerja awal', type: 'textarea' }
     ],
     columns: ['nama_kru', 'divisi', 'status_aktif']
@@ -795,6 +797,15 @@ export default function UnifiedDashboardPage() {
     setSubmitting(true);
     try {
       const payload = { ...formData };
+      
+      // Bersihkan ketergantungan relasional asing jika tabel yang diubah adalah Master Data [1]
+      if (config.table === 'outlets') {
+        delete payload.kru_id;
+        delete payload.outlet_id;
+      }
+      if (config.table === 'kru') {
+        delete payload.kru_id;
+      }
 
       if (editId) {
         const { error } = await supabase.from(config.table).update(payload).eq('id', editId);
@@ -1026,7 +1037,7 @@ export default function UnifiedDashboardPage() {
               </button>
               <button 
                 onClick={() => { setActiveTab('laporan'); setIsSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${activeTab === 'laporan' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${activeTab === 'laporan' ? 'bg-white text-brand-red-dark font-bold text-xs' : 'text-white/80 hover:bg-white/10'}`}
               >
                 <FileText className="w-4 h-4" />
                 <span>Laporan &amp; Backup</span>
@@ -1178,7 +1189,7 @@ export default function UnifiedDashboardPage() {
               <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-sm font-black">Daftar Master Outlet</h2>
-                  <button onClick={() => alert('Gunakan database Supabase SQL Editor untuk menambah, mengubah, atau menghapus outlet murni secara aman.')} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
+                  <button onClick={() => { setActiveTab('outlets'); handleOpenDynamicModal(); }} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
                     <Plus className="w-4 h-4" /> Tambah
                   </button>
                 </div>
@@ -1205,7 +1216,12 @@ export default function UnifiedDashboardPage() {
             {/* 3. TAB: MASTER KRU */}
             {activeTab === 'kru' && (
               <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
-                <h2 className="text-sm font-black mb-4">Daftar Master Kru</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-sm font-black">Daftar Master Kru</h2>
+                  <button onClick={() => { setActiveTab('kru'); handleOpenDynamicModal(); }} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
+                    <Plus className="w-4 h-4" /> Tambah
+                  </button>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
                     <thead>
@@ -1267,7 +1283,6 @@ export default function UnifiedDashboardPage() {
                     <table className="w-full text-xs text-left">
                       <thead>
                         <tr className="border-b border-brand-border pb-2 text-brand-muted">
-                          <th className="pb-2 font-bold">Kru Terkait</th>
                           {ENTITY_CONFIGS[activeTab].columns.map(col => (
                             <th key={col} className="pb-2 font-bold capitalize">{col.replace(/_/g, ' ')}</th>
                           ))}
@@ -1277,12 +1292,15 @@ export default function UnifiedDashboardPage() {
                       <tbody className="divide-y divide-brand-border/40">
                         {dynamicRows.filter(r => JSON.stringify(r).toLowerCase().includes(dynamicSearch.toLowerCase())).map((row) => (
                           <tr key={row.id} className="hover:bg-brand-bg/40">
-                            <td className="py-3 font-bold">{row.kru?.nama_kru || 'Umum / Outlet'}</td>
                             {ENTITY_CONFIGS[activeTab].columns.map(col => (
                               <td key={col} className="py-3 text-brand-muted">
-                                {col === 'created_at' || col === 'tanggal_pelaksanaan' || col === 'tanggal' || col === 'tanggal_mulai_pip' || col === 'tanggal_terbit' || col === 'tanggal_kedaluwarsa' || col === 'tanggal_pemberian' || col === 'tanggal_audit'
-                                  ? (row[col] ? new Date(row[col]).toLocaleDateString('id-ID') : '-')
-                                  : String(row[col] ?? '-')
+                                {col === 'kru_id' || col === 'kandidat_id' || col === 'kru_dinilai_id' || col === 'peserta_id'
+                                  ? (row.kru?.nama_kru || '-')
+                                  : col === 'outlet_id'
+                                    ? (row.outlets?.nama_outlet || '-')
+                                    : col === 'created_at' || col === 'tanggal_pelaksanaan' || col === 'tanggal' || col === 'tanggal_mulai_pip' || col === 'tanggal_terbit' || col === 'tanggal_kedaluwarsa' || col === 'tanggal_pemberian' || col === 'tanggal_audit'
+                                      ? (row[col] ? new Date(row[col]).toLocaleDateString('id-ID') : '-')
+                                      : String(row[col] ?? '-')
                                 }
                               </td>
                             ))}
@@ -1559,7 +1577,7 @@ export default function UnifiedDashboardPage() {
             <form onSubmit={handleSaveDynamicEntity} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               
               {/* Relasi Hubungan Kru Opsional (Failsafe Auto-Populate) */}
-              {ENTITY_CONFIGS[activeTab].table !== 'pd_kamus_kompetensi' && ENTITY_CONFIGS[activeTab].table !== 'pd_annual_pd_plan' && (
+              {ENTITY_CONFIGS[activeTab].table !== 'pd_kamus_kompetensi' && ENTITY_CONFIGS[activeTab].table !== 'pd_annual_pd_plan' && ENTITY_CONFIGS[activeTab].table !== 'outlets' && ENTITY_CONFIGS[activeTab].table !== 'kru' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-brand-bg dark:bg-dark-bg/60 rounded-xl border border-brand-border">
                   <div>
                     <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">Nama Kru Sasaran</label>
@@ -1589,7 +1607,7 @@ export default function UnifiedDashboardPage() {
               {/* Pemetaan Atribut Dinamis Sesuai Kolom Database */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {ENTITY_CONFIGS[activeTab].fields.map(field => {
-                  if (field.name === 'kru_id' || field.name === 'outlet_id') return null;
+                  if (field.name === 'kru_id' || (field.name === 'outlet_id' && ENTITY_CONFIGS[activeTab].table !== 'kru')) return null;
                   return (
                     <div key={field.name} className={field.type === 'textarea' ? 'sm:col-span-2' : ''}>
                       <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">{field.label}</label>
@@ -1611,6 +1629,19 @@ export default function UnifiedDashboardPage() {
                           className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
                         >
                           {field.options.map(opt => <option key={opt}>{opt}</option>)}
+                        </select>
+                      )}
+
+                      {/* Dropdown Khusus Pemilihan Outlet Relasional untuk Master Kru [1] */}
+                      {field.name === 'outlet_id' && ENTITY_CONFIGS[activeTab].table === 'kru' && (
+                        <select 
+                          value={formData.outlet_id || ''}
+                          onChange={(e) => setFormData({...formData, outlet_id: e.target.value})}
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          required
+                        >
+                          <option value="">-- Pilih Outlet --</option>
+                          {outlets.map(o => <option key={o.id} value={o.id}>{o.nama_outlet}</option>)}
                         </select>
                       )}
 
