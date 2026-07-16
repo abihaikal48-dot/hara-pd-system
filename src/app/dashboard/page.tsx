@@ -11,8 +11,7 @@ import {
   FileText, Settings, LogOut, ChevronDown, Award, DollarSign, Target, 
   ClipboardList, Sliders, Bookmark, X, Menu, Bell, Sun, Moon, Plus, 
   Edit2, Trash2, Search, Loader2, CheckCircle, Info, Download, Printer,
-  UserCheck, Users, Play, Check, Shield, Flame, BookmarkCheck, CalendarDays,
-  History, UsersRound, HelpCircle as HelpIcon, FileSpreadsheet, RefreshCw
+  UserCheck, Users, Play, Check, Shield, Flame, ClipboardCheck, History, Activity, AlertCircle
 } from 'lucide-react';
 
 const AVATAR_COLORS = ['#C0392B', '#F4B400', '#8E2A1F', '#E67E22', '#2E86AB', '#6C3483', '#16A085'];
@@ -30,6 +29,23 @@ function avatarColorOf(name: string) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
+// LOGO SVG MINIMALIS ELEGAN KUSTOM REPRESENTASI PEOPLE DEVELOPMENT HARA [1]
+const LogoPD = () => (
+  <svg className="w-10 h-10 shadow-lg animate-pulse" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 5L85 25V60C85 79.3 70.1 91.8 50 95C29.9 91.8 15 79.3 15 60V25L50 5Z" fill="url(#goldGrad)" />
+    <path d="M42 35C45 35 48 38 48 42C48 45 45 48 42 48C39 48 36 45 36 42C36 38 39 35 42 35Z" fill="#8E2A1F" />
+    <path d="M50 20C55 20 60 25 60 31C60 37 55 42 50 42C45 42 40 37 40 31C40 25 45 20 50 20Z" fill="#C0392B" />
+    <path d="M50 45L65 65H35L50 45Z" fill="#FFF" opacity="0.9" />
+    <path d="M50 60V80" stroke="#FFF" strokeWidth="4" strokeLinecap="round" />
+    <defs>
+      <linearGradient id="goldGrad" x1="15" y1="5" x2="85" y2="95" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFDD7A" />
+        <stop offset="100%" stop-color="#F4B400" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 // =========================================================
 // UNIFIED DYNAMIC CRUD ENGINE SCHEMA DEFINITION [1]
 // =========================================================
@@ -37,6 +53,7 @@ const ENTITY_CONFIGS: Record<string, {
   table: string;
   title: string;
   desc: string;
+  selectQuery: string; // UNTUK MENGATASI GALAT RELATIONSHIP SUPABASE SECARA SPESIFIK & AMAN
   fields: Array<{ name: string; label: string; type: 'text' | 'textarea' | 'select' | 'number' | 'date'; options?: string[] }>;
   columns: string[];
 }> = {
@@ -44,6 +61,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'outlets',
     title: 'Master Outlet',
     desc: 'Kelola data operasional seluruh outlet penugasan Hara Chicken.',
+    selectQuery: '*',
     fields: [
       { name: 'kode_outlet', label: 'Kode Outlet (Contoh: HC-BTL01)', type: 'text' },
       { name: 'nama_outlet', label: 'Nama Outlet', type: 'text' },
@@ -57,6 +75,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'kru',
     title: 'Master Kru',
     desc: 'Kelola tim kerja penugasan. Pilih outlet penugasan di bawah.',
+    selectQuery: '*, outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'nama_kru', label: 'Nama Lengkap Kru', type: 'text' },
       { name: 'divisi', label: 'Divisi Tugas', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
@@ -70,6 +89,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'tna',
     title: 'Training Need Analysis (TNA)',
     desc: 'Catat setiap kesenjangan kompetensi yang ditemukan di lapangan untuk menyusun rencana training.',
+    selectQuery: '*, outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'divisi', label: 'Divisi', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
       { name: 'sumber_temuan', label: 'Sumber Temuan', type: 'text' },
@@ -85,6 +105,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'rencana_training',
     title: 'Rencana Training / Silabus',
     desc: 'Rancang jadwal dan metode pelatihan berdasarkan kebutuhan training.',
+    selectQuery: '*, outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'topik', label: 'Topik Pelatihan', type: 'text' },
       { name: 'tujuan_pembelajaran', label: 'Tujuan Pembelajaran', type: 'textarea' },
@@ -101,6 +122,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'observasi_lapangan',
     title: 'Observasi Kerja Lapangan',
     desc: 'Catat hasil pemantauan kepatuhan standar kerja operasional kru saat shift berjalan.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'tanggal_shift', label: 'Tanggal & Shift', type: 'text' },
       { name: 'standar_sop', label: 'Standar SOP Diamati', type: 'text' },
@@ -108,12 +130,13 @@ const ENTITY_CONFIGS: Record<string, {
       { name: 'catatan_detail', label: 'Catatan Lapangan', type: 'textarea' },
       { name: 'rencana_follow_up', label: 'Rencana Tindak Lanjut', type: 'textarea' }
     ],
-    columns: ['tanggal_shift', 'standar_sop', 'hasil']
+    columns: ['kru_id', 'tanggal_shift', 'standar_sop', 'hasil']
   },
   coaching: {
     table: 'coaching_log',
     title: 'Coaching Log (Model GROW)',
     desc: 'Dokumentasikan sesi percakapan pembinaan personal bermetode GROW bersama kru.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'tanggal', label: 'Tanggal Sesi', type: 'date' },
       { name: 'goal', label: 'Goal (Sasaran)', type: 'text' },
@@ -122,24 +145,26 @@ const ENTITY_CONFIGS: Record<string, {
       { name: 'will_komitmen', label: 'Will (Komitmen Aksi & Waktu)', type: 'textarea' },
       { name: 'hasil_follow_up', label: 'Catatan Follow-Up', type: 'textarea' }
     ],
-    columns: ['tanggal', 'goal', 'will_komitmen']
+    columns: ['kru_id', 'tanggal', 'goal', 'will_komitmen']
   },
   gap: {
     table: 'gap_analysis',
     title: 'Competency Gap Analysis',
     desc: 'Analisis tingkat kesenjangan kompetensi kerja kru terhadap standar standar jabatan.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'kompetensi_dinilai', label: 'Kompetensi Kerja Dinilai', type: 'text' },
       { name: 'skor_standar', label: 'Skor Standar', type: 'number' },
       { name: 'skor_aktual', label: 'Skor Aktual', type: 'number' },
       { name: 'rekomendasi', label: 'Rekomendasi Tindakan', type: 'textarea' }
     ],
-    columns: ['kompetensi_dinilai', 'skor_standar', 'skor_aktual', 'gap_score']
+    columns: ['kru_id', 'kompetensi_dinilai', 'skor_standar', 'skor_aktual', 'gap_score']
   },
   keluhan: {
     table: 'kartu_keluhan',
     title: 'Kartu Keluhan Pelanggan',
     desc: 'Log keluhan operasional. Keluhan Tipe A wajib diatasi segera di outlet.',
+    selectQuery: '*, kru:kru_terkait_id(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'tanggal_shift', label: 'Tanggal & Shift', type: 'text' },
       { name: 'tipe_keluhan', label: 'Tipe Keluhan', type: 'select', options: ['A - Segera di Tempat', 'B - Dikaji Manajemen'] },
@@ -154,6 +179,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'talent_tracker',
     title: 'Talent & Suksesi Tracker',
     desc: 'Identifikasi dan pantau kesiapan suksesi kepemimpinan bagi kru berprestasi.',
+    selectQuery: '*, kru:kandidat_id(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'target_posisi', label: 'Target Posisi Promosi', type: 'text' },
       { name: 'tanggung_jawab_uji_coba', label: 'Tanggung Jawab Uji Coba', type: 'textarea' },
@@ -166,6 +192,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'pd_idp',
     title: 'Individual Development Plan (IDP)',
     desc: 'Rencana kerja peningkatan kecakapan mandiri kru berjangka menengah.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'kompetensi_sasaran', label: 'Kompetensi Sasaran', type: 'text' },
       { name: 'aksi_nyata', label: 'Aksi Nyata', type: 'textarea' },
@@ -173,12 +200,13 @@ const ENTITY_CONFIGS: Record<string, {
       { name: 'dukungan_dibutuhkan', label: 'Dukungan/Alat Dibutuhkan', type: 'text' },
       { name: 'status', label: 'Status IDP', type: 'select', options: ['Direncanakan', 'Berjalan', 'Selesai'] }
     ],
-    columns: ['kompetensi_sasaran', 'target_selesai', 'status']
+    columns: ['kru_id', 'kompetensi_sasaran', 'target_selesai', 'status']
   },
   evaluasi_reaksi: {
     table: 'pd_evaluasi_reaksi',
     title: 'Evaluasi Reaksi Training (Kirkpatrick L1)',
     desc: 'Ukur tingkat kepuasan peserta terhadap materi, sarana, dan fasilitator pelatihan.',
+    selectQuery: '*',
     fields: [
       { name: 'topik_training', label: 'Topik Pelatihan', type: 'text' },
       { name: 'tanggal', label: 'Tanggal Sesi', type: 'date' },
@@ -194,29 +222,32 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'pd_pre_post_test',
     title: 'Pre-Test & Post-Test Tracker',
     desc: 'Catat peningkatan pengetahuan kognitif kru sebelum dan sesudah pelatihan.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'topik', label: 'Topik Pelatihan', type: 'text' },
       { name: 'skor_pre', label: 'Skor Pre-Test', type: 'number' },
       { name: 'skor_post', label: 'Skor Post-Test', type: 'number' }
     ],
-    columns: ['topik', 'skor_pre', 'skor_post', 'learning_gain', 'status_kelulusan']
+    columns: ['kru_id', 'topik', 'skor_pre', 'skor_post', 'learning_gain', 'status_kelulusan']
   },
   onboarding: {
     table: 'pd_onboarding',
     title: 'Onboarding Journey Checklist',
     desc: 'Pantau tahapan adaptasi kerja dan orientasi kru baru secara berkala.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'tanggal_mulai', label: 'Tanggal Mulai', type: 'date' },
       { name: 'tahap_onboarding', label: 'Tahap Onboarding', type: 'select', options: ['Day 1', 'Week 1', 'Month 1', 'Month 3'] },
       { name: 'status_checklist', label: 'Status Checklist', type: 'select', options: ['Belum Mulai', 'Proses', 'Selesai'] },
       { name: 'catatan_mentor', label: 'Catatan Mentor', type: 'textarea' }
     ],
-    columns: ['tanggal_mulai', 'tahap_onboarding', 'status_checklist']
+    columns: ['kru_id', 'tanggal_mulai', 'tahap_onboarding', 'status_checklist']
   },
   budget: {
     table: 'pd_budget_cost',
     title: 'Training Budget & Cost Tracker',
     desc: 'Audit efisiensi anggaran dan realisasi biaya program pelatihan.',
+    selectQuery: '*, outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'topik_training', label: 'Topik Pelatihan', type: 'text' },
       { name: 'anggaran', label: 'Anggaran Dialokasikan', type: 'number' },
@@ -229,6 +260,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'pd_pip_log',
     title: 'Performance Improvement Plan (PIP)',
     desc: 'Program bimbingan intensif bagi kru yang membutuhkan perbaikan kinerja khusus.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'masalah_kinerja_utama', label: 'Masalah Kinerja Utama', type: 'textarea' },
       { name: 'target_perbaikan_kerja', label: 'Target Perbaikan Kerja', type: 'textarea' },
@@ -236,12 +268,13 @@ const ENTITY_CONFIGS: Record<string, {
       { name: 'tanggal_mulai_pip', label: 'Tanggal Mulai PIP', type: 'date' },
       { name: 'hasil_evaluasi_akhir', label: 'Evaluasi Akhir', type: 'select', options: ['Dalam Pemantauan', 'Lulus (Kinerja Baik)', 'Gagal (Tindak Lanjut HR)'] }
     ],
-    columns: ['tanggal_mulai_pip', 'durasi_pip_hari', 'hasil_evaluasi_akhir']
+    columns: ['kru_id', 'tanggal_mulai_pip', 'durasi_pip_hari', 'hasil_evaluasi_akhir']
   },
   kamus: {
     table: 'pd_kamus_kompetensi',
     title: 'Kamus Kompetensi Kerja',
     desc: 'Katalog acuan definisi perilaku kerja standar di bawah divisi Hara Chicken.',
+    selectQuery: '*',
     fields: [
       { name: 'nama_kompetensi', label: 'Nama Kompetensi', type: 'text' },
       { name: 'definisi', label: 'Definisi Kompetensi', type: 'textarea' },
@@ -255,6 +288,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'pd_audit_standar',
     title: 'Audit Standar Operasional',
     desc: 'Audit kepatuhan standar kualitas kebersihan, kecepatan saji, dan keramahan.',
+    selectQuery: '*, outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'tanggal_audit', label: 'Tanggal Audit', type: 'date' },
       { name: 'auditor_lapangan', label: 'Auditor Lapangan', type: 'text' },
@@ -269,30 +303,33 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'pd_recognition',
     title: 'Employee Recognition Log',
     desc: 'Pendataan pemberian apresiasi, kudos, dan penghargaan kru berprestasi.',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'jenis_apresiasi', label: 'Jenis Apresiasi', type: 'text' },
       { name: 'keterangan_prestasi', label: 'Uraian Prestasi Kerja', type: 'textarea' },
       { name: 'tanggal_pemberian', label: 'Tanggal Pemberian', type: 'date' },
       { name: 'pemberi_apresiasi', label: 'Pemberi Apresiasi', type: 'text' }
     ],
-    columns: ['jenis_apresiasi', 'tanggal_pemberian', 'pemberi_apresiasi']
+    columns: ['kru_id', 'jenis_apresiasi', 'tanggal_pemberian', 'pemberi_apresiasi']
   },
   sertifikasi: {
     table: 'pd_sertifikasi',
     title: 'Sertifikasi Kompetensi Kru',
     desc: 'Monitor sertifikat resmi penjaminan mutu kru (misal: Food Safety, Halal).',
+    selectQuery: '*, kru(nama_kru), outlets!outlet_id(nama_outlet)',
     fields: [
       { name: 'nama_sertifikasi', label: 'Nama Sertifikasi', type: 'text' },
       { name: 'nomor_sertifikat', label: 'Nomor Sertifikat Resmi', type: 'text' },
       { name: 'tanggal_terbit', label: 'Tanggal Terbit', type: 'date' },
       { name: 'tanggal_kedaluwarsa', label: 'Tanggal Kedaluwarsa', type: 'date' }
     ],
-    columns: ['nama_sertifikasi', 'tanggal_kedaluwarsa', 'status_keaktifan']
+    columns: ['kru_id', 'nama_sertifikasi', 'tanggal_kedaluwarsa', 'status_keaktifan']
   },
   sop: {
     table: 'bank_sop',
     title: 'Bank Standar Operasional Prosedur (SOP)',
     desc: 'Kelola data SOP. Butir langkah kerja di sini otomatis memuat ceklis ujian.',
+    selectQuery: '*',
     fields: [
       { name: 'kode_sop', label: 'Kode SOP', type: 'text' },
       { name: 'divisi', label: 'Divisi', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
@@ -306,6 +343,7 @@ const ENTITY_CONFIGS: Record<string, {
     table: 'bank_soal',
     title: 'Bank Soal Kuis Teori',
     desc: 'Kelola data soal. Butir soal di sini akan diacak menjadi kuis uji teori.',
+    selectQuery: '*',
     fields: [
       { name: 'topik', label: 'Topik Kuis', type: 'text' },
       { name: 'divisi', label: 'Divisi', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
@@ -346,6 +384,8 @@ export default function UnifiedDashboardPage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [tnaList, setTnaList] = useState<any[]>([]);
   const [complaints, setComplaints] = useState<any[]>([]);
+  const [auditScores, setAuditScores] = useState<any[]>([]);
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
 
   // CRUD & Modals State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -473,6 +513,12 @@ export default function UnifiedDashboardPage() {
       setTnaList(tna || []);
       setComplaints(cmp || []);
 
+      // UPGRADE DASHBOARD ADVANCED: Ambil log audit standar dan log aktivitas riil [1]
+      const { data: aud } = await supabase.from('pd_audit_standar').select('*, outlets!outlet_id(nama_outlet)').order('tanggal_audit', { ascending: false }).limit(3);
+      const { data: logs } = await supabase.from('log_aktivitas').select('*').order('waktu', { ascending: false }).limit(4);
+      setAuditScores(aud || []);
+      setActivityLogs(logs || []);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -480,7 +526,7 @@ export default function UnifiedDashboardPage() {
     }
   };
 
-  // Muat Data Kueri Dinamis untuk 17 Modul Lain
+  // Muat Data Kueri Dinamis untuk 17 Modul Lain (Bebas dari Galat Relasi Supabase) [1]
   const loadDynamicRows = async (tabKey: string) => {
     const config = ENTITY_CONFIGS[tabKey];
     if (!config) return;
@@ -489,7 +535,7 @@ export default function UnifiedDashboardPage() {
     try {
       const { data, error } = await supabase
         .from(config.table)
-        .select('*, kru(nama_kru), outlets!outlet_id(nama_outlet)')
+        .select(config.selectQuery)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -860,9 +906,7 @@ export default function UnifiedDashboardPage() {
       `}>
         <div className="flex items-center justify-between mb-6 pb-2 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFDD7A] to-brand-yellow flex items-center justify-center font-black text-lg text-brand-red-dark shadow-lg">
-              H
-            </div>
+            <LogoPD />
             <div>
               <h1 className="font-extrabold text-sm leading-none tracking-wide">Hara Chicken</h1>
               <p className="text-[9px] opacity-80 uppercase tracking-[2px] mt-1 font-semibold">People Dev</p>
@@ -1090,7 +1134,7 @@ export default function UnifiedDashboardPage() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20">
           <div className="max-w-7xl mx-auto animate-fade-slide-in">
             
-            {/* 1. TAB: DASHBOARD */}
+            {/* 1. TAB: DASHBOARD (UPGRADE TOTAL PROFESIONAL) [1] */}
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
                 {/* Banner Gradasi Koki */}
@@ -1181,10 +1225,52 @@ export default function UnifiedDashboardPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* UPGRADE WIDGET: AUDIT OPERASIONAL & LOG AKTIVITAS RIIL [1] */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+                    <h2 className="text-xs font-black text-brand-muted uppercase mb-3 flex items-center gap-1.5">
+                      <ClipboardCheck className="w-4 h-4 text-emerald-500" />
+                      <span>Rata-Rata Skor Audit Standar Terkini</span>
+                    </h2>
+                    <div className="divide-y divide-brand-border/40">
+                      {auditScores.map((aud, idx) => (
+                        <div key={idx} className="py-2.5 flex justify-between text-xs">
+                          <div>
+                            <p className="font-bold text-brand-ink">{aud.outlets?.nama_outlet || '-'}</p>
+                            <p className="text-[10px] text-brand-muted mt-0.5">Auditor: {aud.auditor_lapangan} · {new Date(aud.tanggal_audit).toLocaleDateString('id-ID')}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-black text-brand-red">{aud.rata_rata_skor}</span>
+                            <span className="text-[10px] text-brand-muted block">dari 5</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+                    <h2 className="text-xs font-black text-brand-muted uppercase mb-3 flex items-center gap-1.5">
+                      <Activity className="w-4 h-4 text-brand-red" />
+                      <span>Log Aktivitas Sistem Terbaru (Audit Trail)</span>
+                    </h2>
+                    <div className="space-y-3">
+                      {activityLogs.map((log, idx) => (
+                        <div key={idx} className="text-xs p-2.5 bg-brand-bg dark:bg-dark-bg/60 rounded-xl">
+                          <div className="flex justify-between font-bold">
+                            <span className="text-brand-red-dark">{log.actor_email || 'system'}</span>
+                            <span className="text-[10px] font-normal text-brand-muted">{new Date(log.waktu).toLocaleTimeString('id-ID')}</span>
+                          </div>
+                          <p className="text-[10px] text-brand-muted mt-1">Aksi: {log.aksi} · Entitas: {log.entitas}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* ===== CORE ENGINE: DYNAMIC RENDERING UNTUK 17 MODUL PD SISTEM LAIN ===== */}
+            {/* ===== CORE ENGINE: DYNAMIC RENDERING UNTUK 19 TAB MAS_TER & PD SISTEM LAIN ===== */}
             {ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
               <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
@@ -1236,7 +1322,7 @@ export default function UnifiedDashboardPage() {
                           <tr key={row.id} className="hover:bg-brand-bg/40">
                             {ENTITY_CONFIGS[activeTab].columns.map(col => (
                               <td key={col} className="py-3 text-brand-muted">
-                                {col === 'kru_id' || col === 'kandidat_id' || col === 'kru_dinilai_id' || col === 'peserta_id'
+                                {col === 'kru_id' || col === 'kandidat_id' || col === 'kru_dinilai_id' || col === 'peserta_id' || col === 'kru_terkait_id'
                                   ? (row.kru?.nama_kru || '-')
                                   : col === 'outlet_id'
                                     ? (row.outlets?.nama_outlet || '-')
@@ -1502,7 +1588,7 @@ export default function UnifiedDashboardPage() {
         </main>
       </div>
 
-      {/* ===== CENTRALIZED GLASSMORPHIC MODAL DIALOG UNTUK SELURUH 17 TAB PD ===== */}
+      {/* ===== CENTRALIZED GLASSMORPHIC MODAL DIALOG UNTUK SELURUH TAB PD ===== */}
       {isModalOpen && ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white dark:bg-dark-card rounded-2xl shadow-xl border border-brand-border dark:border-dark-border overflow-hidden animate-pop-in">
@@ -1522,11 +1608,11 @@ export default function UnifiedDashboardPage() {
               {ENTITY_CONFIGS[activeTab].table !== 'pd_kamus_kompetensi' && ENTITY_CONFIGS[activeTab].table !== 'pd_annual_pd_plan' && ENTITY_CONFIGS[activeTab].table !== 'outlets' && ENTITY_CONFIGS[activeTab].table !== 'kru' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-brand-bg dark:bg-dark-bg/60 rounded-xl border border-brand-border">
                   <div>
-                    <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">Nama Kru Sasaran</label>
+                    <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">Nama Kru/Subjek Sasaran</label>
                     <select 
                       value={formData.kru_id || ''} 
                       onChange={(e) => handleKruSelectionChange(e.target.value, 'dynamic')}
-                      className="w-full p-2 text-xs bg-white dark:bg-dark-card border border-brand-border rounded-lg"
+                      className="w-full p-2 text-xs bg-white dark:bg-dark-card border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
                       required
                     >
                       <option value="">-- Pilih Kru --</option>
@@ -1538,7 +1624,7 @@ export default function UnifiedDashboardPage() {
                     <select 
                       value={formData.outlet_id || ''} 
                       disabled
-                      className="w-full p-2 text-xs bg-white/50 dark:bg-dark-card/50 border border-brand-border rounded-lg cursor-not-allowed font-semibold"
+                      className="w-full p-2 text-xs bg-white/50 dark:bg-dark-card/50 border border-brand-border rounded-lg cursor-not-allowed font-semibold text-brand-ink dark:text-dark-ink"
                     >
                       {outlets.map(o => <option key={o.id} value={o.id}>{o.nama_outlet}</option>)}
                     </select>
@@ -1558,7 +1644,7 @@ export default function UnifiedDashboardPage() {
                         <textarea 
                           value={formData[field.name] || ''}
                           onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
                           rows={3}
                           required
                         />
@@ -1568,7 +1654,7 @@ export default function UnifiedDashboardPage() {
                         <select 
                           value={formData[field.name] || ''}
                           onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
                         >
                           {field.options.map(opt => <option key={opt}>{opt}</option>)}
                         </select>
@@ -1579,7 +1665,7 @@ export default function UnifiedDashboardPage() {
                         <select 
                           value={formData.outlet_id || ''}
                           onChange={(e) => setFormData({...formData, outlet_id: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
                           required
                         >
                           <option value="">-- Pilih Outlet --</option>
@@ -1592,7 +1678,7 @@ export default function UnifiedDashboardPage() {
                           type="date"
                           value={formData[field.name] ? new Date(formData[field.name]).toISOString().substring(0, 10) : ''}
                           onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
                           required
                         />
                       )}
@@ -1602,7 +1688,7 @@ export default function UnifiedDashboardPage() {
                           type="number"
                           value={formData[field.name] ?? 0}
                           onChange={(e) => setFormData({...formData, [field.name]: Number(e.target.value)})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
                           required
                         />
                       )}
@@ -1612,7 +1698,7 @@ export default function UnifiedDashboardPage() {
                           type="text"
                           value={formData[field.name] || ''}
                           onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
                           required
                         />
                       )}
