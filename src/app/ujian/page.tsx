@@ -39,10 +39,10 @@ export default function PublicExamPage() {
   const [selectedTopik, setSelectedTopik] = useState('');
   const [jumlahSoal, setJumlahSoal] = useState(5);
 
-  // Status Jalannya Kuis
+  // Status Jalannya Kuis (Penyelarasan Nama State quizJawaban) [1]
   const [quizStarted, setQuizStarted] = useState(false);
   const [soalList, setSoalList] = useState<Soal[]>([]);
-  const [jawaban, setQuizJawaban] = useState<Record<string, string>>({});
+  const [quizJawaban, setQuizJawaban] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // State Hasil Akhir
