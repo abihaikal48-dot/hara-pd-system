@@ -3,43 +3,99 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --red: #C0392B;
+    --red-dark: #8E2A1F;
+    --yellow: #F4B400;
+    --ink: #1E1E1E;
+    --bg: #F6F5F3;
+    --card: #FFFFFF;
+    --border: #E7E3DE;
+    --muted: #8A8580;
+    --radius: 14px;
+    --radius-lg: 20px;
+  }
+
   body {
     @apply bg-brand-bg text-brand-ink transition-colors duration-200 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Custom Scrollbar untuk Navigasi Panjang */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+@layer utilities {
+  /* ===== KEYFRAME ANIMASI INTERAKTIF (PERSIS INDEX ASLI) ===== */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.92) translateY(6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes floatY {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-9px); }
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  /* ===== KELAS UTILIAS ANIMASI MODERN ===== */
+  .animate-fade-slide-in {
+    animation: fadeSlideIn 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+  .animate-pop-in {
+    animation: popIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .animate-float-slow {
+    animation: floatY 4.6s ease-in-out infinite;
+  }
+  .animate-float-med {
+    animation: floatY 3.7s ease-in-out infinite;
+    animation-delay: 0.25s;
+  }
+  .animate-float-fast {
+    animation: floatY 3.1s ease-in-out infinite;
+    animation-delay: 0.5s;
+  }
+  .animate-gradient-shift {
+    background-size: 200% 200%;
+    animation: gradientShift 14s ease infinite;
+  }
+
+  /* ===== GLASSMORPHISM UTILITIES ===== */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+
+  .dark .glass-card {
+    background: rgba(34, 31, 28, 0.95);
+    border-color: rgba(51, 47, 43, 0.8);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background: rgba(142, 42, 31, 0.2);
   border-radius: 99px;
 }
-
-.dark ::webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb {
   background: rgba(241, 237, 233, 0.15);
-}
-
-/* Animasi Halus */
-@keyframes fadeSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
