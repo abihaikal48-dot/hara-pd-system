@@ -11,7 +11,8 @@ import {
   FileText, Settings, LogOut, ChevronDown, Award, DollarSign, Target, 
   ClipboardList, Sliders, Bookmark, X, Menu, Bell, Sun, Moon, Plus, 
   Edit2, Trash2, Search, Loader2, CheckCircle, Info, Download, Printer,
-  UserCheck, Users, Play, Check
+  UserCheck, Users, Play, Check, Shield, Flame, BookmarkCheck, CalendarDays,
+  History, UsersRound, HelpCircle as HelpIcon, FileSpreadsheet, RefreshCw
 } from 'lucide-react';
 
 const AVATAR_COLORS = ['#C0392B', '#F4B400', '#8E2A1F', '#E67E22', '#2E86AB', '#6C3483', '#16A085'];
@@ -28,6 +29,272 @@ function avatarColorOf(name: string) {
   }
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
+
+// =========================================================
+// UNIFIED DYNAMIC CRUD ENGINE SCHEMA DEFINITION [1]
+// =========================================================
+const ENTITY_CONFIGS: Record<string, {
+  table: string;
+  title: string;
+  desc: string;
+  fields: Array<{ name: string; label: string; type: 'text' | 'textarea' | 'select' | 'number' | 'date'; options?: string[] }>;
+  columns: string[];
+}> = {
+  tna: {
+    table: 'tna',
+    title: 'Training Need Analysis (TNA)',
+    desc: 'Catat setiap kesenjangan kompetensi yang ditemukan di lapangan untuk menyusun rencana training.',
+    fields: [
+      { name: 'divisi', label: 'Divisi', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
+      { name: 'sumber_temuan', label: 'Sumber Temuan', type: 'text' },
+      { name: 'deskripsi_gap', label: 'Deskripsi Gap', type: 'textarea' },
+      { name: 'jenis_gap', label: 'Jenis Gap', type: 'select', options: ['Pengetahuan', 'Keterampilan', 'Sikap'] },
+      { name: 'prioritas', label: 'Prioritas', type: 'select', options: ['Tinggi', 'Sedang', 'Rendah'] },
+      { name: 'rencana_tindak_lanjut', label: 'Rencana Tindak Lanjut', type: 'textarea' },
+      { name: 'status', label: 'Status', type: 'select', options: ['Belum', 'Proses', 'Selesai'] }
+    ],
+    columns: ['divisi', 'deskripsi_gap', 'prioritas', 'status']
+  },
+  rencana: {
+    table: 'rencana_training',
+    title: 'Rencana Training / Silabus',
+    desc: 'Rancang jadwal dan metode pelatihan berdasarkan kebutuhan training.',
+    fields: [
+      { name: 'topik', label: 'Topik Pelatihan', type: 'text' },
+      { name: 'tujuan_pembelajaran', label: 'Tujuan Pembelajaran', type: 'textarea' },
+      { name: 'peserta', label: 'Sasaran Peserta', type: 'text' },
+      { name: 'metode', label: 'Metode', type: 'select', options: ['Kelas', 'Praktik', 'Simulasi', 'Mentoring'] },
+      { name: 'durasi', label: 'Durasi Sesi', type: 'text' },
+      { name: 'fasilitator', label: 'Fasilitator', type: 'text' },
+      { name: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan', type: 'date' },
+      { name: 'status', label: 'Status Rencana', type: 'select', options: ['Direncanakan', 'Terlaksana', 'Dibatalkan'] }
+    ],
+    columns: ['topik', 'peserta', 'fasilitator', 'tanggal_pelaksanaan', 'status']
+  },
+  observasi: {
+    table: 'observasi_lapangan',
+    title: 'Observasi Kerja Lapangan',
+    desc: 'Catat hasil pemantauan kepatuhan standar kerja operasional kru saat shift berjalan.',
+    fields: [
+      { name: 'tanggal_shift', label: 'Tanggal & Shift', type: 'text' },
+      { name: 'standar_sop', label: 'Standar SOP Diamati', type: 'text' },
+      { name: 'hasil', label: 'Hasil Observasi', type: 'select', options: ['Sesuai Standar', 'Perlu Perbaikan'] },
+      { name: 'catatan_detail', label: 'Catatan Lapangan', type: 'textarea' },
+      { name: 'rencana_follow_up', label: 'Rencana Tindak Lanjut', type: 'textarea' }
+    ],
+    columns: ['tanggal_shift', 'standar_sop', 'hasil']
+  },
+  coaching: {
+    table: 'coaching_log',
+    title: 'Coaching Log (Model GROW)',
+    desc: 'Dokumentasikan sesi percakapan pembinaan personal bermetode GROW bersama kru.',
+    fields: [
+      { name: 'tanggal', label: 'Tanggal Sesi', type: 'date' },
+      { name: 'goal', label: 'Goal (Sasaran)', type: 'text' },
+      { name: 'reality', label: 'Reality (Kondisi Saat Ini)', type: 'textarea' },
+      { name: 'options', label: 'Options (Pilihan Aksi)', type: 'textarea' },
+      { name: 'will_komitmen', label: 'Will (Komitmen Aksi & Waktu)', type: 'textarea' },
+      { name: 'hasil_follow_up', label: 'Catatan Follow-Up', type: 'textarea' }
+    ],
+    columns: ['tanggal', 'goal', 'will_komitmen']
+  },
+  gap: {
+    table: 'gap_analysis',
+    title: 'Competency Gap Analysis',
+    desc: 'Analisis tingkat kesenjangan kompetensi kerja kru terhadap standar standar jabatan.',
+    fields: [
+      { name: 'kompetensi_dinilai', label: 'Kompetensi Kerja Dinilai', type: 'text' },
+      { name: 'skor_standar', label: 'Skor Standar', type: 'number' },
+      { name: 'skor_aktual', label: 'Skor Aktual', type: 'number' },
+      { name: 'rekomendasi', label: 'Rekomendasi Tindakan', type: 'textarea' }
+    ],
+    columns: ['kompetensi_dinilai', 'skor_standar', 'skor_aktual', 'gap_score']
+  },
+  keluhan: {
+    table: 'kartu_keluhan',
+    title: 'Kartu Keluhan Pelanggan',
+    desc: 'Log keluhan operasional. Keluhan Tipe A wajib diatasi segera di outlet.',
+    fields: [
+      { name: 'tanggal_shift', label: 'Tanggal & Shift', type: 'text' },
+      { name: 'tipe_keluhan', label: 'Tipe Keluhan', type: 'select', options: ['A - Segera di Tempat', 'B - Dikaji Manajemen'] },
+      { name: 'deskripsi_keluhan', label: 'Deskripsi Keluhan', type: 'textarea' },
+      { name: 'tindakan_diambil', label: 'Tindakan yang Diambil', type: 'textarea' },
+      { name: 'status', label: 'Status Kasus', type: 'select', options: ['Dalam kajian', 'Selesai'] },
+      { name: 'tindak_lanjut_training', label: 'Rekomendasi Tindak Lanjut', type: 'text' }
+    ],
+    columns: ['tanggal_shift', 'tipe_keluhan', 'status']
+  },
+  talent: {
+    table: 'talent_tracker',
+    title: 'Talent & Suksesi Tracker',
+    desc: 'Identifikasi dan pantau kesiapan suksesi kepemimpinan bagi kru berprestasi.',
+    fields: [
+      { name: 'target_posisi', label: 'Target Posisi Promosi', type: 'text' },
+      { name: 'tanggung_jawab_uji_coba', label: 'Tanggung Jawab Uji Coba', type: 'textarea' },
+      { name: 'progres_terkini', label: 'Progres Evaluasi', type: 'textarea' },
+      { name: 'target_waktu_siap', label: 'Target Kesiapan', type: 'text' }
+    ],
+    columns: ['target_posisi', 'target_waktu_siap', 'created_at']
+  },
+  idp: {
+    table: 'pd_idp',
+    title: 'Individual Development Plan (IDP)',
+    desc: 'Rencana kerja peningkatan kecakapan mandiri kru berjangka menengah.',
+    fields: [
+      { name: 'kompetensi_sasaran', label: 'Kompetensi Sasaran', type: 'text' },
+      { name: 'aksi_nyata', label: 'Aksi Nyata', type: 'textarea' },
+      { name: 'target_selesai', label: 'Target Selesai', type: 'date' },
+      { name: 'dukungan_dibutuhkan', label: 'Dukungan/Alat Dibutuhkan', type: 'text' },
+      { name: 'status', label: 'Status IDP', type: 'select', options: ['Direncanakan', 'Berjalan', 'Selesai'] }
+    ],
+    columns: ['kompetensi_sasaran', 'target_selesai', 'status']
+  },
+  evaluasi_reaksi: {
+    table: 'pd_evaluasi_reaksi',
+    title: 'Evaluasi Reaksi Training (Kirkpatrick L1)',
+    desc: 'Ukur tingkat kepuasan peserta terhadap materi, sarana, dan fasilitator pelatihan.',
+    fields: [
+      { name: 'topik_training', label: 'Topik Pelatihan', type: 'text' },
+      { name: 'tanggal', label: 'Tanggal Sesi', type: 'date' },
+      { name: 'fasilitator', label: 'Nama Fasilitator', type: 'text' },
+      { name: 'skor_materi', label: 'Rating Materi (1-5)', type: 'number' },
+      { name: 'skor_fasilitator', label: 'Rating Fasilitator (1-5)', type: 'number' },
+      { name: 'skor_sarana', label: 'Rating Sarana (1-5)', type: 'number' },
+      { name: 'saran_perbaikan', label: 'Masukan & Saran', type: 'textarea' }
+    ],
+    columns: ['topik_training', 'tanggal', 'fasilitator', 'skor_materi']
+  },
+  pre_post: {
+    table: 'pd_pre_post_test',
+    title: 'Pre-Test & Post-Test Tracker',
+    desc: 'Catat peningkatan pengetahuan kognitif kru sebelum dan sesudah pelatihan.',
+    fields: [
+      { name: 'topik', label: 'Topik Pelatihan', type: 'text' },
+      { name: 'skor_pre', label: 'Skor Pre-Test', type: 'number' },
+      { name: 'skor_post', label: 'Skor Post-Test', type: 'number' }
+    ],
+    columns: ['topik', 'skor_pre', 'skor_post', 'learning_gain', 'status_kelulusan']
+  },
+  onboarding: {
+    table: 'pd_onboarding',
+    title: 'Onboarding Journey Checklist',
+    desc: 'Pantau tahapan adaptasi kerja dan orientasi kru baru secara berkala.',
+    fields: [
+      { name: 'tanggal_mulai', label: 'Tanggal Mulai', type: 'date' },
+      { name: 'tahap_onboarding', label: 'Tahap Onboarding', type: 'select', options: ['Day 1', 'Week 1', 'Month 1', 'Month 3'] },
+      { name: 'status_checklist', label: 'Status Checklist', type: 'select', options: ['Belum Mulai', 'Proses', 'Selesai'] },
+      { name: 'catatan_mentor', label: 'Catatan Mentor', type: 'textarea' }
+    ],
+    columns: ['tanggal_mulai', 'tahap_onboarding', 'status_checklist']
+  },
+  budget: {
+    table: 'pd_budget_cost',
+    title: 'Training Budget & Cost Tracker',
+    desc: 'Audit efisiensi anggaran dan realisasi biaya program pelatihan.',
+    fields: [
+      { name: 'topik_training', label: 'Topik Pelatihan', type: 'text' },
+      { name: 'anggaran', label: 'Anggaran Dialokasikan', type: 'number' },
+      { name: 'realisasi', label: 'Realisasi Biaya', type: 'number' },
+      { name: 'catatan_pengeluaran', label: 'Catatan Pengeluaran', type: 'textarea' }
+    ],
+    columns: ['topik_training', 'anggaran', 'realisasi', 'selisih']
+  },
+  pip: {
+    table: 'pd_pip_log',
+    title: 'Performance Improvement Plan (PIP)',
+    desc: 'Program bimbingan intensif bagi kru yang membutuhkan perbaikan kinerja khusus.',
+    fields: [
+      { name: 'masalah_kinerja_utama', label: 'Masalah Kinerja Utama', type: 'textarea' },
+      { name: 'target_perbaikan_kerja', label: 'Target Perbaikan Kerja', type: 'textarea' },
+      { name: 'durasi_pip_hari', label: 'Durasi PIP (Hari)', type: 'number' },
+      { name: 'tanggal_mulai_pip', label: 'Tanggal Mulai PIP', type: 'date' },
+      { name: 'hasil_evaluasi_akhir', label: 'Evaluasi Akhir', type: 'select', options: ['Dalam Pemantauan', 'Lulus (Kinerja Baik)', 'Gagal (Tindak Lanjut HR)'] }
+    ],
+    columns: ['tanggal_mulai_pip', 'durasi_pip_hari', 'hasil_evaluasi_akhir']
+  },
+  kamus: {
+    table: 'pd_kamus_kompetensi',
+    title: 'Kamus Kompetensi Kerja',
+    desc: 'Katalog acuan definisi perilaku kerja standar di bawah divisi Hara Chicken.',
+    fields: [
+      { name: 'nama_kompetensi', label: 'Nama Kompetensi', type: 'text' },
+      { name: 'definisi', label: 'Definisi Kompetensi', type: 'textarea' },
+      { name: 'level_1_basic', label: 'Level 1 (Basic)', type: 'textarea' },
+      { name: 'level_2_intermediate', label: 'Level 2 (Intermediate)', type: 'textarea' },
+      { name: 'level_3_advanced', label: 'Level 3 (Advanced)', type: 'textarea' }
+    ],
+    columns: ['nama_kompetensi', 'definisi']
+  },
+  audit: {
+    table: 'pd_audit_standar',
+    title: 'Audit Standar Operasional',
+    desc: 'Audit kepatuhan standar kualitas kebersihan, kecepatan saji, dan keramahan.',
+    fields: [
+      { name: 'tanggal_audit', label: 'Tanggal Audit', type: 'date' },
+      { name: 'auditor_lapangan', label: 'Auditor Lapangan', type: 'text' },
+      { name: 'skor_kebersihan', label: 'Skor Kebersihan (1-5)', type: 'number' },
+      { name: 'skor_kecepatan', label: 'Skor Kecepatan (1-5)', type: 'number' },
+      { name: 'skor_keramahan', label: 'Skor Keramahan (1-5)', type: 'number' },
+      { name: 'catatan_audit', label: 'Catatan Khusus Audit', type: 'textarea' }
+    ],
+    columns: ['tanggal_audit', 'auditor_lapangan', 'rata_rata_skor']
+  },
+  recognition: {
+    table: 'pd_recognition',
+    title: 'Employee Recognition Log',
+    desc: 'Pendataan pemberian apresiasi, kudos, dan penghargaan kru berprestasi.',
+    fields: [
+      { name: 'jenis_apresiasi', label: 'Jenis Apresiasi', type: 'text' },
+      { name: 'keterangan_prestasi', label: 'Uraian Prestasi Kerja', type: 'textarea' },
+      { name: 'tanggal_pemberian', label: 'Tanggal Pemberian', type: 'date' },
+      { name: 'pemberi_apresiasi', label: 'Pemberi Apresiasi', type: 'text' }
+    ],
+    columns: ['jenis_apresiasi', 'tanggal_pemberian', 'pemberi_apresiasi']
+  },
+  sertifikasi: {
+    table: 'pd_sertifikasi',
+    title: 'Sertifikasi Kompetensi Kru',
+    desc: 'Monitor sertifikat resmi penjaminan mutu kru (misal: Food Safety, Halal).',
+    fields: [
+      { name: 'nama_sertifikasi', label: 'Nama Sertifikasi', type: 'text' },
+      { name: 'nomor_sertifikat', label: 'Nomor Sertifikat Resmi', type: 'text' },
+      { name: 'tanggal_terbit', label: 'Tanggal Terbit', type: 'date' },
+      { name: 'tanggal_kedaluwarsa', label: 'Tanggal Kedaluwarsa', type: 'date' }
+    ],
+    columns: ['nama_sertifikasi', 'tanggal_kedaluwarsa', 'status_keaktifan']
+  },
+  sop: {
+    table: 'bank_sop',
+    title: 'Bank Standar Operasional Prosedur (SOP)',
+    desc: 'Kelola data SOP. Butir langkah kerja di sini otomatis memuat ceklis ujian.',
+    fields: [
+      { name: 'kode_sop', label: 'Kode SOP', type: 'text' },
+      { name: 'divisi', label: 'Divisi', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
+      { name: 'judul_sop', label: 'Judul SOP', type: 'text' },
+      { name: 'langkah_langkah', label: 'Langkah Kerja (Satu langkah per baris)', type: 'textarea' },
+      { name: 'referensi_modul', label: 'Referensi Modul', type: 'text' }
+    ],
+    columns: ['kode_sop', 'judul_sop', 'divisi']
+  },
+  soal: {
+    table: 'bank_soal',
+    title: 'Bank Soal Kuis Teori',
+    desc: 'Kelola data soal. Butir soal di sini akan diacak menjadi kuis uji teori.',
+    fields: [
+      { name: 'topik', label: 'Topik Kuis', type: 'text' },
+      { name: 'divisi', label: 'Divisi', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
+      { name: 'jenis_soal', label: 'Jenis Soal', type: 'select', options: ['Pilihan Ganda', 'Benar/Salah', 'Essay'] },
+      { name: 'pertanyaan', label: 'Pertanyaan Soal', type: 'textarea' },
+      { name: 'opsi_a', label: 'Opsi A', type: 'text' },
+      { name: 'opsi_b', label: 'Opsi B', type: 'text' },
+      { name: 'opsi_c', label: 'Opsi C', type: 'text' },
+      { name: 'opsi_d', label: 'Opsi D', type: 'text' },
+      { name: 'kunci_jawaban', label: 'Kunci Jawaban', type: 'text' },
+      { name: 'bobot', label: 'Bobot Nilai', type: 'number' }
+    ],
+    columns: ['topik', 'jenis_soal', 'kunci_jawaban']
+  }
+};
 
 export default function UnifiedDashboardPage() {
   const { user, logout } = useAuth();
@@ -60,6 +327,11 @@ export default function UnifiedDashboardPage() {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  // Dynamic CRUD State for other tables
+  const [dynamicRows, setDynamicRows] = useState<any[]>([]);
+  const [dynamicSearch, setDynamicSearch] = useState('');
+  const [dynamicLoading, setDynamicLoading] = useState(false);
+
   // Penilaian Teori Quiz State
   const [selectedKruId, setSelectedKruId] = useState('');
   const [selectedTopik, setSelectedTopik] = useState('');
@@ -90,7 +362,7 @@ export default function UnifiedDashboardPage() {
   const [repYear, setRepYear] = useState('2026');
 
   // =========================================================
-  // FUNGSI PEMBANTU UTAMA (DISEJAJARKAN DI ATAS AGAR BEBAS ERROR) [1]
+  // FUNGSI PEMBANTU UTAMA (DISEJAJARKAN DI ATAS AGAR BEBAS ERROR)
   // =========================================================
   const toggleDarkMode = () => {
     const root = document.documentElement;
@@ -182,6 +454,27 @@ export default function UnifiedDashboardPage() {
     }
   };
 
+  // Muat Data Kueri Dinamis untuk 17 Modul Lain
+  const loadDynamicRows = async (tabKey: string) => {
+    const config = ENTITY_CONFIGS[tabKey];
+    if (!config) return;
+
+    setDynamicLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from(config.table)
+        .select('*, kru(nama_kru), outlets(nama_outlet)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDynamicRows(data || []);
+    } catch (err: any) {
+      alert('Gagal memuat tabel: ' + err.message);
+    } finally {
+      setDynamicLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSystemData();
     // Tema Gelap
@@ -189,6 +482,13 @@ export default function UnifiedDashboardPage() {
     setDarkMode(isDark);
     if (isDark) document.documentElement.classList.add('dark');
   }, []);
+
+  // Monitor Pergantian Tab Dinamis
+  useEffect(() => {
+    if (ENTITY_CONFIGS.hasOwnProperty(activeTab)) {
+      loadDynamicRows(activeTab);
+    }
+  }, [activeTab]);
 
   // Memuat Profil Kru 360 saat Dropdown Dipilih
   useEffect(() => {
@@ -238,6 +538,14 @@ export default function UnifiedDashboardPage() {
         setPenilai(user?.nama || 'Haikal');
       } else if (formType === 'teori') {
         setSelectedKruId(kruId);
+      } else {
+        // Dynamic Form Auto-Populate
+        setFormData(prev => ({
+          ...prev,
+          kru_id: kruId,
+          outlet_id: foundKru.outlet_id,
+          divisi: foundKru.divisi
+        }));
       }
     }
   };
@@ -424,6 +732,84 @@ export default function UnifiedDashboardPage() {
     }
   };
 
+  // =========================================================
+  // DYNAMIC CRUD ACTIONS HANDLER [1]
+  // =========================================================
+  const handleOpenDynamicModal = (row?: any) => {
+    const config = ENTITY_CONFIGS[activeTab];
+    if (!config) return;
+
+    if (row) {
+      setEditId(row.id);
+      const initialForm: Record<string, any> = {};
+      config.fields.forEach(f => {
+        initialForm[f.name] = row[f.name];
+      });
+      // Sertakan data relasional opsional jika ada
+      initialForm.kru_id = row.kru_id || '';
+      initialForm.outlet_id = row.outlet_id || '';
+      setFormData(initialForm);
+    } else {
+      setEditId(null);
+      const initialForm: Record<string, any> = {};
+      config.fields.forEach(f => {
+        initialForm[f.name] = f.type === 'number' ? 0 : f.type === 'select' && f.options ? f.options[0] : '';
+      });
+      // Sediakan nilai default relasional opsional
+      initialForm.kru_id = kruList[0]?.id || '';
+      initialForm.outlet_id = outlets[0]?.id || '';
+      setFormData(initialForm);
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSaveDynamicEntity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const config = ENTITY_CONFIGS[activeTab];
+    if (!config) return;
+
+    setSubmitting(true);
+    try {
+      const payload = { ...formData };
+      const actor = user?.email || 'system';
+
+      if (editId) {
+        const { error } = await supabase.from(config.table).update(payload).eq('id', editId);
+        if (error) throw error;
+        alert('Data berhasil diperbarui!');
+      } else {
+        const { error } = await supabase.from(config.table).insert(payload);
+        if (error) throw error;
+        alert('Data berhasil ditambahkan!');
+      }
+
+      setIsModalOpen(false);
+      loadDynamicRows(activeTab);
+      loadSystemData();
+    } catch (err: any) {
+      alert('Gagal menyimpan: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteDynamicEntity = async (id: string) => {
+    const config = ENTITY_CONFIGS[activeTab];
+    if (!config) return;
+
+    if (confirm('Yakin ingin menghapus data ini secara permanen dari Supabase?')) {
+      try {
+        const { error } = await supabase.from(config.table).delete().eq('id', id);
+        if (error) throw error;
+        alert('Data dihapus!');
+        loadDynamicRows(activeTab);
+        loadSystemData();
+      } catch (err: any) {
+        alert('Gagal menghapus: ' + err.message);
+      }
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-brand-bg dark:bg-dark-bg text-brand-ink dark:text-dark-ink transition-colors duration-200">
       
@@ -432,7 +818,7 @@ export default function UnifiedDashboardPage() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* ===== SIDEBAR NAVIGASI (SAMA PERSIS CODES INDEX) ===== */}
+      {/* ===== SIDEBAR NAVIGASI UTUH ===== */}
       <aside className={`
         fixed inset-y-0 left-0 w-[270px] bg-gradient-to-br from-brand-red-dark via-brand-red to-[#D9583F] 
         text-white p-5 flex flex-col z-50 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0
@@ -483,6 +869,98 @@ export default function UnifiedDashboardPage() {
                 <Users2 className="w-4 h-4" />
                 <span>Master Kru</span>
               </button>
+            </div>
+          </div>
+
+          {/* SIKLUS PD UTAMA (AKTIF TOTAL) [1] */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-2 px-1">Siklus Pelatihan</p>
+            <div className="space-y-1">
+              <button 
+                onClick={() => { setActiveTab('tna'); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'tna' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span>TNA Kesenjangan</span>
+              </button>
+              <button 
+                onClick={() => { setActiveTab('rencana'); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'rencana' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+              >
+                <CalendarRange className="w-4 h-4" />
+                <span>Rencana Training</span>
+              </button>
+              <button 
+                onClick={() => { setActiveTab('observasi'); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'observasi' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+              >
+                <Eye className="w-4 h-4" />
+                <span>Observasi Lapangan</span>
+              </button>
+              <button 
+                onClick={() => { setActiveTab('coaching'); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'coaching' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Coaching Log</span>
+              </button>
+              <button 
+                onClick={() => { setActiveTab('gap'); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'gap' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Gap Analysis</span>
+              </button>
+              <button 
+                onClick={() => { setActiveTab('keluhan'); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'keluhan' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+              >
+                <AlertOctagon className="w-4 h-4" />
+                <span>Kartu Keluhan</span>
+              </button>
+              <button 
+                onClick={() => { setActiveTab('talent'); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'talent' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+              >
+                <Star className="w-4 h-4" />
+                <span>Talent Tracker</span>
+              </button>
+            </div>
+          </div>
+
+          {/* SUBMENU PD LANJUTAN (AKTIF TOTAL) [1] */}
+          <div>
+            <button 
+              onClick={() => setIsPdSubOpen(!isPdSubOpen)}
+              className="w-full flex items-center justify-between text-white/50 text-[10px] uppercase tracking-wider font-bold mb-2 px-1 hover:text-white"
+            >
+              <span>PD Lanjutan (Pro)</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isPdSubOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            <div className={`space-y-1 pl-2 border-l border-white/10 mt-1 transition-all duration-200 ${isPdSubOpen ? 'block' : 'hidden'}`}>
+              {[
+                { key: 'idp', label: '🎯 IDP Karyawan' },
+                { key: 'evaluasi_reaksi', label: '📋 Evaluasi L1' },
+                { key: 'pre_post', label: '📊 Pre/Post Test' },
+                { key: 'onboarding', label: '🚀 Onboarding' },
+                { key: 'budget', label: '💰 Budget Training' },
+                { key: 'pip', label: '⚖️ PIP Kinerja' },
+                { key: 'kamus', label: '📖 Kamus Kompetensi' },
+                { key: 'audit', label: '🔍 Audit Operasional' },
+                { key: 'recognition', label: '⭐ Reward & Kudos' },
+                { key: 'sertifikasi', label: '🎖️ Sertifikasi Kru' },
+                { key: 'sop', label: '📘 Bank SOP' },
+                { key: 'soal', label: '❓ Bank Soal' }
+              ].map(sub => (
+                <button 
+                  key={sub.key}
+                  onClick={() => { setActiveTab(sub.key); setIsSidebarOpen(false); }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] transition-all ${activeTab === sub.key ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+                >
+                  {sub.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -560,7 +1038,9 @@ export default function UnifiedDashboardPage() {
               <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-sm font-black capitalize text-brand-ink dark:text-dark-ink">{activeTab} Panel</h2>
+              <h2 className="text-sm font-black capitalize text-brand-ink dark:text-dark-ink">
+                {ENTITY_CONFIGS.hasOwnProperty(activeTab) ? ENTITY_CONFIGS[activeTab].title : `${activeTab} Panel`}
+              </h2>
               <p className="text-[10px] text-brand-muted hidden xs:block">HARA-PD System Pro v2</p>
             </div>
           </div>
@@ -723,6 +1203,85 @@ export default function UnifiedDashboardPage() {
               </div>
             )}
 
+            {/* ===== CORE ENGINE: DYNAMIC RENDERING UNTUK 17 MODUL PD SISTEM LAIN [1] ===== */}
+            {ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
+              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                  <div>
+                    <h2 className="text-sm font-black">{ENTITY_CONFIGS[activeTab].title}</h2>
+                    <p className="text-[11px] text-brand-muted mt-1 leading-relaxed">{ENTITY_CONFIGS[activeTab].desc}</p>
+                  </div>
+                  <button 
+                    onClick={() => handleOpenDynamicModal()}
+                    className="bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-md"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Tambah Data</span>
+                  </button>
+                </div>
+
+                {/* Filter Search */}
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-brand-muted pointer-events-none">
+                    <Search className="w-4 h-4" />
+                  </span>
+                  <input 
+                    type="text"
+                    value={dynamicSearch}
+                    onChange={(e) => setDynamicSearch(e.target.value)}
+                    placeholder="Cari kata kunci data..."
+                    className="w-full pl-10 pr-4 py-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-xl focus:outline-none"
+                  />
+                </div>
+
+                {/* List Table */}
+                {dynamicLoading ? (
+                  <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-brand-muted" /></div>
+                ) : dynamicRows.length === 0 ? (
+                  <p className="text-xs text-brand-muted py-10 text-center">Belum ada data terekam di Supabase.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-brand-border pb-2 text-brand-muted">
+                          <th className="pb-2 font-bold">Kru Terkait</th>
+                          {ENTITY_CONFIGS[activeTab].columns.map(col => (
+                            <th key={col} className="pb-2 font-bold capitalize">{col.replace(/_/g, ' ')}</th>
+                          ))}
+                          <th className="pb-2 font-bold text-center">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-brand-border/40">
+                        {dynamicRows.filter(r => JSON.stringify(r).toLowerCase().includes(dynamicSearch.toLowerCase())).map((row) => (
+                          <tr key={row.id} className="hover:bg-brand-bg/40">
+                            <td className="py-3 font-bold">{row.kru?.nama_kru || 'Umum / Outlet'}</td>
+                            {ENTITY_CONFIGS[activeTab].columns.map(col => (
+                              <td key={col} className="py-3 text-brand-muted">
+                                {col === 'created_at' || col === 'tanggal_pelaksanaan' || col === 'tanggal' || col === 'tanggal_mulai_pip' || col === 'tanggal_terbit' || col === 'tanggal_kedaluwarsa' || col === 'tanggal_pemberian' || col === 'tanggal_audit'
+                                  ? (row[col] ? new Date(row[col]).toLocaleDateString('id-ID') : '-')
+                                  : String(row[col] ?? '-')
+                                }
+                              </td>
+                            ))}
+                            <td className="py-3 text-center">
+                              <div className="flex gap-1.5 justify-center">
+                                <button onClick={() => handleOpenDynamicModal(row)} className="p-1.5 rounded-lg bg-brand-bg text-brand-muted hover:text-brand-ink">
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => handleDeleteDynamicEntity(row.id)} className="p-1.5 rounded-lg bg-brand-red/10 text-brand-red hover:bg-brand-red/20">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 4. TAB: TEORI (KUIS INTERAKTIF) */}
             {activeTab === 'teori' && (
               <div className="space-y-6 max-w-xl mx-auto bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
@@ -785,7 +1344,7 @@ export default function UnifiedDashboardPage() {
                       <div className="text-left"><p className="text-[10px] text-brand-muted font-bold uppercase">Skor</p><p className="font-bold text-brand-red text-base">{quizResult.skor}%</p></div>
                       <div className="text-right"><p className="text-[10px] text-brand-muted font-bold uppercase">Kategori</p><p className="font-bold">{quizResult.kategori}</p></div>
                     </div>
-                    <button onClick={() => setQuizResult(null)} className="w-full border border-brand-border hover:bg-brand-bg text-xs font-bold py-2 rounded-xl">Mulai Uji Ulang</button>
+                    <button onClick={() => setResult(null)} className="w-full border border-brand-border hover:bg-brand-bg text-xs font-bold py-2 rounded-xl">Mulai Uji Ulang</button>
                   </div>
                 )}
               </div>
@@ -959,6 +1518,135 @@ export default function UnifiedDashboardPage() {
           </div>
         </main>
       </div>
+
+      {/* ===== CENTRALIZED GLASSMORPHIC MODAL DIALOG UNTUK SELURUH 17 TAB PD [1] ===== */}
+      {isModalOpen && ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-dark-card rounded-2xl shadow-xl border border-brand-border dark:border-dark-border overflow-hidden animate-pop-in">
+            <div className="flex items-center justify-between p-4 border-b border-brand-border dark:border-dark-border bg-brand-bg dark:bg-dark-bg">
+              <div>
+                <h2 className="text-xs font-black text-brand-red uppercase tracking-wider">{editId ? 'Ubah Data' : 'Tambah Data'}</h2>
+                <p className="text-[10px] text-brand-muted">{ENTITY_CONFIGS[activeTab].title}</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg hover:bg-brand-bg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveDynamicEntity} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+              
+              {/* Relasi Hubungan Kru Opsional (Failsafe Auto-Populate) */}
+              {ENTITY_CONFIGS[activeTab].table !== 'pd_kamus_kompetensi' && ENTITY_CONFIGS[activeTab].table !== 'pd_annual_pd_plan' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-brand-bg dark:bg-dark-bg/60 rounded-xl border border-brand-border">
+                  <div>
+                    <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">Nama Kru Sasaran</label>
+                    <select 
+                      value={formData.kru_id || ''} 
+                      onChange={(e) => handleKruSelectionChange(e.target.value, 'dynamic')}
+                      className="w-full p-2 text-xs bg-white dark:bg-dark-card border border-brand-border rounded-lg"
+                      required
+                    >
+                      <option value="">-- Pilih Kru --</option>
+                      {kruList.map(k => <option key={k.id} value={k.id}>{k.nama_kru}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">Penugasan Outlet</label>
+                    <select 
+                      value={formData.outlet_id || ''} 
+                      disabled
+                      className="w-full p-2 text-xs bg-white/50 dark:bg-dark-card/50 border border-brand-border rounded-lg cursor-not-allowed font-semibold"
+                    >
+                      {outlets.map(o => <option key={o.id} value={o.id}>{o.nama_outlet}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Pemetaan Atribut Dinamis Sesuai Kolom Database */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {ENTITY_CONFIGS[activeTab].fields.map(field => {
+                  if (field.name === 'kru_id' || field.name === 'outlet_id') return null;
+                  return (
+                    <div key={field.name} className={field.type === 'textarea' ? 'sm:col-span-2' : ''}>
+                      <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">{field.label}</label>
+                      
+                      {field.type === 'textarea' && (
+                        <textarea 
+                          value={formData[field.name] || ''}
+                          onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          rows={3}
+                          required
+                        />
+                      )}
+
+                      {field.type === 'select' && field.options && (
+                        <select 
+                          value={formData[field.name] || ''}
+                          onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                        >
+                          {field.options.map(opt => <option key={opt}>{opt}</option>)}
+                        </select>
+                      )}
+
+                      {field.type === 'date' && (
+                        <input 
+                          type="date"
+                          value={formData[field.name] ? new Date(formData[field.name]).toISOString().substring(0, 10) : ''}
+                          onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          required
+                        />
+                      )}
+
+                      {field.type === 'number' && (
+                        <input 
+                          type="number"
+                          value={formData[field.name] ?? 0}
+                          onChange={(e) => setFormData({...formData, [field.name]: Number(e.target.value)})}
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          required
+                        />
+                      )}
+
+                      {field.type === 'text' && (
+                        <input 
+                          type="text"
+                          value={formData[field.name] || ''}
+                          onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
+                          required
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2 justify-end pt-4 border-t border-brand-border">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold border border-brand-border rounded-xl hover:bg-brand-bg"
+                >
+                  Batal
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="px-4 py-2 text-xs font-bold bg-brand-red text-white rounded-xl hover:bg-brand-red-dark flex items-center gap-1.5"
+                >
+                  {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Simpan</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
