@@ -1344,7 +1344,7 @@ export default function UnifiedDashboardPage() {
                       <div className="text-left"><p className="text-[10px] text-brand-muted font-bold uppercase">Skor</p><p className="font-bold text-brand-red text-base">{quizResult.skor}%</p></div>
                       <div className="text-right"><p className="text-[10px] text-brand-muted font-bold uppercase">Kategori</p><p className="font-bold">{quizResult.kategori}</p></div>
                     </div>
-                    <button onClick={() => setResult(null)} className="w-full border border-brand-border hover:bg-brand-bg text-xs font-bold py-2 rounded-xl">Mulai Uji Ulang</button>
+                    <button onClick={() => setQuizResult(null)} className="w-full border border-brand-border hover:bg-brand-bg text-xs font-bold py-2 rounded-xl">Mulai Uji Ulang</button>
                   </div>
                 )}
               </div>
@@ -1519,7 +1519,7 @@ export default function UnifiedDashboardPage() {
         </main>
       </div>
 
-      {/* ===== CENTRALIZED GLASSMORPHIC MODAL DIALOG UNTUK SELURUH 17 TAB PD [1] ===== */}
+      {/* ===== CENTRALIZED GLASSMORPHIC MODAL DIALOG UNTUK SELURUH 17 TAB PD ===== */}
       {isModalOpen && ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white dark:bg-dark-card rounded-2xl shadow-xl border border-brand-border dark:border-dark-border overflow-hidden animate-pop-in">
