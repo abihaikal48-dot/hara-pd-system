@@ -40,6 +40,30 @@ const ENTITY_CONFIGS: Record<string, {
   fields: Array<{ name: string; label: string; type: 'text' | 'textarea' | 'select' | 'number' | 'date'; options?: string[] }>;
   columns: string[];
 }> = {
+  outlets: {
+    table: 'outlets',
+    title: 'Master Outlet',
+    desc: 'Kelola data operasional seluruh outlet penugasan Hara Chicken.',
+    fields: [
+      { name: 'kode_outlet', label: 'Kode Outlet (Contoh: HC-BTL01)', type: 'text' },
+      { name: 'nama_outlet', label: 'Nama Outlet', type: 'text' },
+      { name: 'alamat', label: 'Alamat Lengkap', type: 'textarea' },
+      { name: 'kepala_outlet', label: 'Nama Kepala Outlet', type: 'text' },
+      { name: 'area_supervisor', label: 'Nama Area Supervisor', type: 'text' }
+    ],
+    columns: ['kode_outlet', 'nama_outlet', 'kepala_outlet', 'area_supervisor']
+  },
+  kru: {
+    table: 'kru',
+    title: 'Master Kru',
+    desc: 'Kelola tim kerja penugasan. Pilih outlet penugasan di formulir tambah.',
+    fields: [
+      { name: 'nama_kru', label: 'Nama Lengkap Kru', type: 'text' },
+      { name: 'divisi', label: 'Divisi Tugas', type: 'select', options: ['Kitchen', 'Helper', 'Geprek', 'Kasir'] },
+      { name: 'catatan', label: 'Catatan Kinerja awal', type: 'textarea' }
+    ],
+    columns: ['nama_kru', 'divisi', 'status_aktif']
+  },
   tna: {
     table: 'tna',
     title: 'Training Need Analysis (TNA)',
@@ -771,7 +795,6 @@ export default function UnifiedDashboardPage() {
     setSubmitting(true);
     try {
       const payload = { ...formData };
-      const actor = user?.email || 'system';
 
       if (editId) {
         const { error } = await supabase.from(config.table).update(payload).eq('id', editId);
@@ -1097,7 +1120,7 @@ export default function UnifiedDashboardPage() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
                     { label: 'Master Outlet', value: stats.totalOutlet, sub: 'Status aktif', color: 'text-brand-red' },
-                    { label: 'Kru Aktif', value: stats.totalKru, sub: 'Terpelihara', color: 'text-brand-yellow' },
+                    { label: 'Kru Dilatih', value: stats.totalKru, sub: 'Terpelihara', color: 'text-brand-yellow' },
                     { label: 'Sesi TNA Terbuka', value: stats.tnaOpen, sub: 'Butuh evaluasi', color: 'text-amber-500' },
                     { label: 'Keluhan Terbuka', value: stats.complaintOpen, sub: 'Perlu respon segera', color: 'text-emerald-500' }
                   ].map((kpi, idx) => (
@@ -1203,7 +1226,7 @@ export default function UnifiedDashboardPage() {
               </div>
             )}
 
-            {/* ===== CORE ENGINE: DYNAMIC RENDERING UNTUK 17 MODUL PD SISTEM LAIN [1] ===== */}
+            {/* ===== CORE ENGINE: DYNAMIC RENDERING UNTUK 17 MODUL PD SISTEM LAIN ===== */}
             {ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
               <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
