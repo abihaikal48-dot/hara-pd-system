@@ -88,6 +88,17 @@ export default function UnifiedDashboardPage() {
   const [repMonth, setRepMonth] = useState('7');
   const [repYear, setRepYear] = useState('2026');
 
+  // =========================================================
+  // FUNGSI PEMBANTU INTERAKTIF CEKLIS ASESMEN (DEFINISI BARU) [1]
+  // =========================================================
+  const setScoreForStep = (idx: number, score: number) => {
+    setStepScores(prev => ({ ...prev, [idx]: score }));
+  };
+
+  const toggleUnderstand = (idx: number, state: boolean) => {
+    setComprehension(prev => ({ ...prev, [idx]: state }));
+  };
+
   // Load All System Data On Mount
   const loadSystemData = async () => {
     setLoading(true);
@@ -660,10 +671,10 @@ export default function UnifiedDashboardPage() {
 
             {/* 2. TAB: MASTER OUTLET */}
             {activeTab === 'outlets' && (
-              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-sm font-black">Daftar Master Outlet</h2>
-                  <button onClick={() => alert('Gunakan database Supabase SQL Editor untuk menambah, mengubah, atau menghapus outlet baru murni secara aman.')} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5">
+                  <button onClick={() => alert('Gunakan database Supabase SQL Editor untuk menambah, mengubah, atau menghapus outlet baru murni secara aman.')} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
                     <Plus className="w-4 h-4" /> Tambah
                   </button>
                 </div>
@@ -689,7 +700,7 @@ export default function UnifiedDashboardPage() {
 
             {/* 3. TAB: MASTER KRU */}
             {activeTab === 'kru' && (
-              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
                 <h2 className="text-sm font-black mb-4">Daftar Master Kru</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
@@ -713,7 +724,7 @@ export default function UnifiedDashboardPage() {
 
             {/* 4. TAB: TEORI (KUIS INTERAKTIF) */}
             {activeTab === 'teori' && (
-              <div className="space-y-6 max-w-xl mx-auto bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+              <div className="space-y-6 max-w-xl mx-auto bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
                 <h2 className="text-sm font-black flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-brand-red" /> Sistem Penilaian Teori</h2>
                 
                 {!quizStarted && !quizResult && (
@@ -740,7 +751,7 @@ export default function UnifiedDashboardPage() {
                 {quizStarted && (
                   <div className="space-y-4">
                     {quizSoal.map((s, idx) => (
-                      <div key={s.id} className="p-4 bg-brand-bg dark:bg-dark-bg rounded-xl border border-brand-border space-y-2">
+                      <div key={s.id} className="p-4 bg-brand-bg dark:bg-dark-bg rounded-xl border border-brand-border space-y-2 animate-fade-slide-in">
                         <p className="text-xs font-bold leading-relaxed">{idx + 1}. {s.pertanyaan}</p>
                         {s.jenis_soal === 'Pilihan Ganda' && (
                           <div className="space-y-1.5 pt-2">
@@ -766,7 +777,7 @@ export default function UnifiedDashboardPage() {
                 )}
 
                 {quizResult && (
-                  <div className="space-y-4 text-center">
+                  <div className="space-y-4 text-center animate-fade-slide-in">
                     <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-full"><CheckCircle className="w-10 h-10" /></div>
                     <h3 className="font-extrabold text-sm text-brand-ink">Ujian Teori Selesai!</h3>
                     <div className="p-3 bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-xl max-w-xs mx-auto flex justify-between text-xs">
@@ -781,7 +792,7 @@ export default function UnifiedDashboardPage() {
 
             {/* 5. TAB: PRAKTIK (BUTIR CEKLIS INTERAKTIF) */}
             {activeTab === 'praktik' && (
-              <div className="space-y-6 max-w-xl mx-auto bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+              <div className="space-y-6 max-w-xl mx-auto bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
                 <h2 className="text-sm font-black flex items-center gap-1.5"><Award className="w-4 h-4 text-brand-red" /> Lembar Penilaian Praktik</h2>
                 <div className="space-y-4">
                   <div>
@@ -799,7 +810,7 @@ export default function UnifiedDashboardPage() {
                 </div>
 
                 {sopSteps.length > 0 && (
-                  <div className="space-y-4 pt-4 border-t border-brand-border">
+                  <div className="space-y-4 pt-4 border-t border-brand-border animate-fade-slide-in">
                     <p className="text-[11px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 p-3 rounded-lg font-bold">Lakukan observasi kerja di lapangan. Nilai butir langkah SOP di bawah.</p>
                     <div className="space-y-2">
                       {sopSteps.map((step, idx) => (
@@ -811,7 +822,7 @@ export default function UnifiedDashboardPage() {
                               { v: 2, label: 'Cukup' },
                               { v: 3, label: 'Kompeten' }
                             ].map(opt => (
-                              <button key={opt.v} onClick={() => setScoreForStep(idx, opt.v)} className={`px-2.5 py-1 text-[10px] font-bold rounded border ${stepScores[idx] === opt.v ? 'bg-brand-red text-white border-brand-red' : 'bg-white border-transparent'}`}>{opt.label}</button>
+                              <button key={opt.v} onClick={() => setScoreForStep(idx, opt.v)} className={`px-2.5 py-1 text-[10px] font-bold rounded border transition-colors ${stepScores[idx] === opt.v ? 'bg-brand-red text-white border-brand-red' : 'bg-white border-transparent'}`}>{opt.label}</button>
                             ))}
                           </div>
                         </div>
@@ -826,7 +837,7 @@ export default function UnifiedDashboardPage() {
 
             {/* 6. TAB: LISAN (INTERAKTIF WAWANCARA) */}
             {activeTab === 'lisan' && (
-              <div className="space-y-6 max-w-xl mx-auto bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+              <div className="space-y-6 max-w-xl mx-auto bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
                 <h2 className="text-sm font-black flex items-center gap-1.5"><MessageSquare className="w-4 h-4 text-brand-red" /> Lembar Penilaian Lisan</h2>
                 <div className="space-y-4">
                   <div>
@@ -844,15 +855,15 @@ export default function UnifiedDashboardPage() {
                 </div>
 
                 {sopSteps.length > 0 && (
-                  <div className="space-y-4 pt-4 border-t border-brand-border">
+                  <div className="space-y-4 pt-4 border-t border-brand-border animate-fade-slide-in">
                     <p className="text-[11px] text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg font-bold">Ajukan pertanyaan lisan terkait langkah SOP berikut. Evaluasi pemahamannya.</p>
                     <div className="space-y-2">
                       {sopSteps.map((step, idx) => (
                         <div key={idx} className="p-3 bg-brand-bg dark:bg-dark-bg rounded-lg flex flex-col gap-2 justify-between border border-brand-border">
                           <p className="text-xs font-semibold leading-relaxed">{idx + 1}. {step}</p>
                           <div className="flex gap-1.5 self-end">
-                            <button onClick={() => toggleUnderstand(idx, true)} className={`px-3 py-1 text-[10px] font-bold rounded-full border ${comprehension[idx] === true ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-white'}`}>Paham</button>
-                            <button onClick={() => toggleUnderstand(idx, false)} className={`px-3 py-1 text-[10px] font-bold rounded-full border ${comprehension[idx] === false ? 'bg-brand-red/10 text-brand-red border-brand-red/20' : 'bg-white'}`}>Belum Paham</button>
+                            <button onClick={() => toggleUnderstand(idx, true)} className={`px-3 py-1 text-[10px] font-bold rounded-full border transition-all ${comprehension[idx] === true ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-white'}`}>Paham</button>
+                            <button onClick={() => toggleUnderstand(idx, false)} className={`px-3 py-1 text-[10px] font-bold rounded-full border transition-all ${comprehension[idx] === false ? 'bg-brand-red/10 text-brand-red border-brand-red/20' : 'bg-white'}`}>Belum Paham</button>
                           </div>
                         </div>
                       ))}
@@ -866,7 +877,7 @@ export default function UnifiedDashboardPage() {
 
             {/* 7. TAB: PROFIL KRU 360 */}
             {activeTab === 'profil' && (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-fade-slide-in">
                 <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
                   <label className="block text-[10px] font-bold text-brand-muted uppercase mb-1">Navigasi Profil Kru</label>
                   <select value={profileKruId} onChange={(e) => setProfilKruId(e.target.value)} className="w-full p-2.5 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-xl">
@@ -875,7 +886,7 @@ export default function UnifiedDashboardPage() {
                 </div>
 
                 {profileLoading ? <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" /></div> : profileKruData && (
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-fade-slide-in">
                     <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border flex justify-between items-center gap-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-brand-red text-white font-bold text-xs flex items-center justify-center">{initialsOf(profileKruData.nama_kru)}</div>
@@ -909,7 +920,7 @@ export default function UnifiedDashboardPage() {
 
             {/* 8. TAB: LAPORAN & BACKUP */}
             {activeTab === 'laporan' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-slide-in">
                 <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border space-y-4">
                   <h2 className="text-xs font-black uppercase text-brand-red">📄 Laporan Bulanan PDF</h2>
                   <p className="text-xs text-brand-muted">Pilih outlet evaluasi lalu buka template PDF siap cetak terintegrasi.</p>
@@ -922,7 +933,7 @@ export default function UnifiedDashboardPage() {
                   <button onClick={() => alert('Fitur compile PDF template siap dijalankan via browser print landscape.')} className="w-full bg-brand-red text-white py-2.5 rounded-lg text-xs font-bold">Buka Form Cetak Laporan (A4)</button>
                 </div>
 
-                <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border space-y-4">
+                <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border space-y-4 animate-fade-slide-in">
                   <h2 className="text-xs font-black uppercase text-brand-yellow">💾 Cadangkan Database CSV</h2>
                   <p className="text-xs text-brand-muted">Unduh salinan arsip data utama Supabase langsung ke dalam format *.csv standard.</p>
                   <div className="grid grid-cols-2 gap-2 pt-2">
