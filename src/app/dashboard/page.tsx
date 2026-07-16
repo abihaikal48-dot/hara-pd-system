@@ -416,7 +416,7 @@ export default function UnifiedDashboardPage() {
     setLoading(true);
     try {
       const { data: ot } = await supabase.from('outlets').select('*').order('nama_outlet');
-      const { data: kr } = await supabase.from('kru').select('*, outlets(nama_outlet)').order('nama_kru');
+      const { data: kr } = await supabase.from('kru').select('*, outlets!outlet_id(nama_outlet)').order('nama_kru');
       const { data: sp } = await supabase.from('bank_sop').select('*').eq('status_aktif', true).order('judul_sop');
       const { data: sl } = await supabase.from('bank_soal').select('*').eq('status_aktif', true);
 
@@ -446,7 +446,7 @@ export default function UnifiedDashboardPage() {
       });
 
       // Olah BCI per Outlet & Klasemen Leaderboard
-      const { data: obs } = await supabase.from('observasi_lapangan').select('*, outlets(nama_outlet), kru(nama_kru, divisi)');
+      const { data: obs } = await supabase.from('observasi_lapangan').select('*, outlets!outlet_id(nama_outlet), kru(nama_kru, divisi)');
       const bciMap: Record<string, { total: number; sesuai: number }> = {};
       const leaderboardMap: Record<string, { nama: string; divisi: string; total: number; sesuai: number }> = {};
 
@@ -468,8 +468,8 @@ export default function UnifiedDashboardPage() {
       setLeaderboard(Object.values(leaderboardMap).map(l => ({ ...l, bci: Math.round((l.sesuai / l.total) * 100) })).sort((a,b) => b.bci - a.bci).slice(0, 5));
 
       // Ambil TNA & Keluhan
-      const { data: tna } = await supabase.from('tna').select('*, outlets(nama_outlet)').eq('prioritas', 'Tinggi').neq('status', 'Selesai').limit(5);
-      const { data: cmp } = await supabase.from('kartu_keluhan').select('*, outlets(nama_outlet)').neq('status', 'Selesai').limit(5);
+      const { data: tna } = await supabase.from('tna').select('*, outlets!outlet_id(nama_outlet)').eq('prioritas', 'Tinggi').neq('status', 'Selesai').limit(5);
+      const { data: cmp } = await supabase.from('kartu_keluhan').select('*, outlets!outlet_id(nama_outlet)').neq('status', 'Selesai').limit(5);
       setTnaList(tna || []);
       setComplaints(cmp || []);
 
@@ -489,7 +489,7 @@ export default function UnifiedDashboardPage() {
     try {
       const { data, error } = await supabase
         .from(config.table)
-        .select('*, kru(nama_kru), outlets(nama_outlet)')
+        .select('*, kru(nama_kru), outlets!outlet_id(nama_outlet)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -522,7 +522,7 @@ export default function UnifiedDashboardPage() {
     const fetchProfil = async () => {
       setProfileLoading(true);
       try {
-        const { data: prof } = await supabase.from('kru').select('*, outlets(nama_outlet)').eq('id', profileKruId).single();
+        const { data: prof } = await supabase.from('kru').select('*, outlets!outlet_id(nama_outlet)').eq('id', profileKruId).single();
         setProfileKruData(prof);
 
         const { data: obs } = await supabase.from('observasi_lapangan').select('*').eq('kru_id', profileKruId).order('created_at', { ascending: false });
@@ -1180,64 +1180,6 @@ export default function UnifiedDashboardPage() {
                       ))}
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* 2. TAB: MASTER OUTLET */}
-            {activeTab === 'outlets' && (
-              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-sm font-black">Daftar Master Outlet</h2>
-                  <button onClick={() => { setActiveTab('outlets'); handleOpenDynamicModal(); }} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
-                    <Plus className="w-4 h-4" /> Tambah
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-brand-border pb-2 text-brand-muted"><th className="pb-2">Kode</th><th className="pb-2">Nama Outlet</th><th className="pb-2">Kepala</th><th className="pb-2">Status</th></tr>
-                    </thead>
-                    <tbody>
-                      {outlets.map((o) => (
-                        <tr key={o.id} className="border-b border-brand-border/40 hover:bg-brand-bg/50">
-                          <td className="py-3 font-bold text-brand-red-dark">{o.kode_outlet}</td>
-                          <td className="py-3 font-bold">{o.nama_outlet}</td>
-                          <td className="py-3">{o.kepala_outlet || '-'}</td>
-                          <td className="py-3"><span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">{o.status_aktif ? 'Aktif' : 'Nonaktif'}</span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* 3. TAB: MASTER KRU */}
-            {activeTab === 'kru' && (
-              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-sm font-black">Daftar Master Kru</h2>
-                  <button onClick={() => { setActiveTab('kru'); handleOpenDynamicModal(); }} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
-                    <Plus className="w-4 h-4" /> Tambah
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-brand-border pb-2 text-brand-muted"><th className="pb-2">Nama Kru</th><th className="pb-2">Divisi</th><th className="pb-2">Outlet</th><th className="pb-2">Status</th></tr>
-                    </thead>
-                    <tbody>
-                      {kruList.map((k) => (
-                        <tr key={k.id} className="border-b border-brand-border/40 hover:bg-brand-bg/50">
-                          <td className="py-3 font-bold">{k.nama_kru}</td>
-                          <td className="py-3 font-semibold text-brand-red">{k.divisi}</td>
-                          <td className="py-3">{k.outlets?.nama_outlet || '-'}</td>
-                          <td className="py-3"><span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">{k.status_aktif ? 'Aktif' : 'Resign'}</span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
             )}
