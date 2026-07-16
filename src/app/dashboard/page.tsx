@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
@@ -89,7 +90,7 @@ export default function UnifiedDashboardPage() {
   const [repYear, setRepYear] = useState('2026');
 
   // =========================================================
-  // FUNGSI PEMBANTU INTERAKTIF CEKLIS ASESMEN (DEFINISI BARU) [1]
+  // FUNGSI PEMBANTU INTERAKTIF CEKLIS ASESMEN
   // =========================================================
   const setScoreForStep = (idx: number, score: number) => {
     setStepScores(prev => ({ ...prev, [idx]: score }));
@@ -209,19 +210,6 @@ export default function UnifiedDashboardPage() {
     };
     fetchProfil();
   }, [profileKruId]);
-
-  const toggleDarkMode = () => {
-    const root = document.documentElement;
-    if (darkMode) {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setDarkMode(false);
-    } else {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setDarkMode(true);
-    }
-  };
 
   // =========================================================
   // SISTEM SINKRONISASI LOGIKA DETIL KRU (AUTO-POPULATE) [1]
@@ -674,7 +662,7 @@ export default function UnifiedDashboardPage() {
               <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-sm font-black">Daftar Master Outlet</h2>
-                  <button onClick={() => alert('Gunakan database Supabase SQL Editor untuk menambah, mengubah, atau menghapus outlet baru murni secara aman.')} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
+                  <button onClick={() => alert('Gunakan database Supabase SQL Editor untuk menambah, mengubah, atau menghapus outlet murni secara aman.')} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
                     <Plus className="w-4 h-4" /> Tambah
                   </button>
                 </div>
