@@ -90,8 +90,21 @@ export default function UnifiedDashboardPage() {
   const [repYear, setRepYear] = useState('2026');
 
   // =========================================================
-  // FUNGSI PEMBANTU INTERAKTIF CEKLIS ASESMEN
+  // FUNGSI PEMBANTU UTAMA (DISEJAJARKAN DI ATAS AGAR BEBAS ERROR) [1]
   // =========================================================
+  const toggleDarkMode = () => {
+    const root = document.documentElement;
+    if (darkMode) {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      setDarkMode(false);
+    } else {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+      setDarkMode(true);
+    }
+  };
+
   const setScoreForStep = (idx: number, score: number) => {
     setStepScores(prev => ({ ...prev, [idx]: score }));
   };
