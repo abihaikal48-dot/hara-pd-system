@@ -63,7 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null);
         setLoading(false);
-        router.push('/');
+        
+        // SINKRONISASI PENTING: Jangan paksa redirect login jika sedang membuka halaman ujian kru [1]
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/ujian')) {
+          router.push('/');
+        }
       }
     });
 
