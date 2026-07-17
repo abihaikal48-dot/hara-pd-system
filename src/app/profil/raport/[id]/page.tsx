@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Loader2, Printer, CheckCircle2, Award, BookOpen, MessageSquare, TrendingUp, ShieldAlert, MapPin, User, Bookmark } from 'lucide-react';
+import { Loader2, Printer, CheckCircle2, Award, BookOpen, MessageSquare, TrendingUp, ShieldAlert, MapPin, User, Bookmark, Calendar } from 'lucide-react';
 
 export default function RaportKruPage() {
   const params = useParams();
@@ -16,10 +16,10 @@ export default function RaportKruPage() {
   const [history, setHistory] = useState<Record<string, any[]>>({
     observasi: [],
     coaching: [],
+    gap: [],
     teori: [],
     praktik: [],
-    lisan: [],
-    gap: []
+    lisan: []
   });
 
   const [metrics, setMetrics] = useState<Record<string, any>>({
