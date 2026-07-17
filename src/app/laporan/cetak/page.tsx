@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Loader2, Printer, AlertCircle, CheckCircle2, FileText, ClipboardCheck, Activity } from 'lucide-react';
+import { Loader2, Printer, AlertCircle, CheckCircle2, FileText, ClipboardCheck, Activity, ShieldAlert, AlertOctagon } from 'lucide-react';
 
 function CetakLaporanContent() {
   const searchParams = useSearchParams();
@@ -16,7 +16,7 @@ function CetakLaporanContent() {
   const [compCount, setCompCount] = useState(0);
   const [bci, setBci] = useState(0);
   
-  // List Relasional Riil untuk Menambah Kredibilitas Laporan
+  // List Relasional Riil untuk Menambah Kredibilitas Laporan [1]
   const [activeTnas, setActiveTnas] = useState<any[]>([]);
   const [activeComplaints, setActiveComplaints] = useState<any[]>([]);
   
