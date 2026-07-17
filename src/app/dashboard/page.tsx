@@ -14,7 +14,7 @@ import {
   Edit2, Trash2, Search, Loader2, CheckCircle2, Info, Download, Printer,
   UserCheck, Users, Play, Check, Shield, Flame, BookmarkCheck, CalendarDays,
   History, UsersRound, HelpCircle as HelpIcon, FileSpreadsheet, RefreshCw,
-  Activity, AlertCircle, Sparkles, LifeBuoy
+  Activity, AlertCircle, Sparkles, LifeBuoy, ClipboardCheck
 } from 'lucide-react';
 
 const AVATAR_COLORS = ['#C0392B', '#F4B400', '#8E2A1F', '#E67E22', '#2E86AB', '#6C3483', '#16A085'];
@@ -492,8 +492,8 @@ export default function UnifiedDashboardPage() {
     try {
       const { data: ot } = await supabase.from('outlets').select('*').order('nama_outlet');
       const { data: kr } = await supabase.from('kru').select('*, outlets!outlet_id(nama_outlet)').order('nama_kru');
-      const { data: sp } = await supabase.from('bank_sop').select('*').eq('status_aktif', true).order('judul_sop');
-      const { data: sl } = await supabase.from('bank_soal').select('*').eq('status_aktif', true);
+      const { data: sp = [] } = await supabase.from('bank_sop').select('*').eq('status_aktif', true).order('judul_sop');
+      const { data: sl = [] } = await supabase.from('bank_soal').select('*').eq('status_aktif', true);
 
       setOutlets(ot || []);
       setKruList(kr || []);
@@ -1719,7 +1719,7 @@ export default function UnifiedDashboardPage() {
               </div>
             )}
 
-            {/* ===== 9. TAB BARU: MODUL PENGATURAN GLOBAL TERPISAH ===== */}
+            {/* ===== 9. TAB: MODUL PENGATURAN GLOBAL TERPISAH ===== */}
             {activeTab === 'settings' && (
               <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in space-y-5">
                 <div>
