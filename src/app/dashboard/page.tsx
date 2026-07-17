@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -638,7 +639,7 @@ export default function UnifiedDashboardPage() {
         const { data: gap } = await supabase.from('gap_analysis').select('*').eq('kru_id', profileKruId);
         const { data: teo } = await supabase.from('penilaian_teori').select('*').eq('kru_id', profileKruId).order('created_at', { ascending: false });
         const { data: pra } = await supabase.from('penilaian_praktik').select('*, bank_sop(judul_sop)').eq('kru_id', profileKruId).order('created_at', { ascending: false });
-        const { data: lis } = await supabase.from('penilaian_lisan').select('*, bank_sop(judul_sop)').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+        const { data: lis = [] } = await supabase.from('penilaian_lisan').select('*, bank_sop(judul_sop)').eq('kru_id', profileKruId).order('created_at', { ascending: false });
 
         setProfileHistory({ observasi: obs || [], coaching: coa || [], gap: gap || [], teori: teo || [], praktik: pra || [], lisan: lis || [] });
 
@@ -662,16 +663,16 @@ export default function UnifiedDashboardPage() {
   // SISTEM SINKRONISASI LOGIKA DETIL KRU (AUTO-POPULATE) [1]
   // =========================================================
   const handleKruSelectionChange = (kruId: string, formType: string) => {
+    // ALWAYS update the selected ID first so the dropdown actually changes!
+    setSelectedKruId(kruId);
     const foundKru = kruList.find(k => k.id === kruId);
     if (foundKru) {
       if (formType === 'praktik') {
-        setSelectedKruId(kruId);
         setPenilai(user?.nama || 'Haikal');
       } else if (formType === 'lisan') {
-        setSelectedKruId(kruId);
         setPenilai(user?.nama || 'Haikal');
       } else if (formType === 'teori') {
-        setSelectedKruId(kruId);
+        // do nothing extra
       } else {
         // Dynamic Form Auto-Populate
         setFormData(prev => ({
@@ -1675,9 +1676,27 @@ export default function UnifiedDashboardPage() {
                           <p className="text-[10px] text-brand-muted uppercase mt-0.5">{profileKruData.divisi} — {profileKruData.outlets?.nama_outlet}</p>
                         </div>
                       </div>
-                      <Link href={`/profil/sertifikat/${profileKruData.id}`} target="_blank" className="bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1">
-                        <Printer className="w-4 h-4" /> Cetak Sertifikat
-                      </Link>
+                      
+                      {/* LAYOUT PEMBARUAN: PRINT RAPORT KRU & SERTIFIKAT OBJEKTIF [1] */}
+                      <div className="flex gap-2">
+                        <Link 
+                          href={`/profil/raport/${profileKruData.id}`} 
+                          target="_blank" 
+                          className="bg-brand-yellow hover:bg-[#D49B00] text-brand-red-dark text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1 shadow-md"
+                        >
+                          <ClipboardCheck className="w-4 h-4" /> 
+                          <span>Cetak Raport</span>
+                        </Link>
+                        <Link 
+                          href={`/profil/sertifikat/${profileKruData.id}`} 
+                          target="_blank" 
+                          className="bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1 shadow-md"
+                        >
+                          <Printer className="w-4 h-4" /> 
+                          <span>Cetak Sertifikat</span>
+                        </Link>
+                      </div>
+
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1813,21 +1832,27 @@ export default function UnifiedDashboardPage() {
         </main>
       </div>
 
-      {/* ===== CENTRALIZED GLASSMORPHIC MODAL DIALOG UNTUK SELURUH TAB PD ===== */}
+      {/* ===== UPGRADE MODAL POP-UP SESUAI TEMA GOLDEN-CRIMSON [1] ===== */}
       {isModalOpen && ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white dark:bg-dark-card rounded-2xl shadow-xl border border-brand-border dark:border-dark-border overflow-hidden animate-pop-in">
-            <div className="flex items-center justify-between p-4 border-b border-brand-border dark:border-dark-border bg-brand-bg dark:bg-dark-bg">
+            <div className="flex items-center justify-between p-4 border-b border-brand-border dark:border-dark-border bg-gradient-to-r from-brand-red-dark to-brand-red text-white">
               <div>
-                <h2 className="text-xs font-black text-brand-red uppercase tracking-wider">{editId ? 'Ubah Data' : 'Tambah Data'}</h2>
-                <p className="text-[10px] text-brand-muted">{ENTITY_CONFIGS[activeTab].title}</p>
+                <h2 className="text-xs font-black uppercase tracking-wider">Tambah / Edit Data</h2>
+                <p className="text-[10px] opacity-80">{ENTITY_CONFIGS[activeTab].title}</p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg hover:bg-brand-bg">
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Kotak Pedoman Kasus & Skenario Di Atas Formulir [1] */}
+            <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 p-3.5 border-b border-brand-border text-[11px] leading-relaxed flex items-start gap-2">
+              <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <p><b>Panduan Pengisian Kasus:</b> {ENTITY_CONFIGS[activeTab].guideline}</p>
+            </div>
             
-            <form onSubmit={handleSaveDynamicEntity} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+            <form onSubmit={handleSaveDynamicEntity} className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
               
               {/* Relasi Hubungan Kru Opsional (Failsafe Auto-Populate) */}
               {ENTITY_CONFIGS[activeTab].table !== 'pd_kamus_kompetensi' && ENTITY_CONFIGS[activeTab].table !== 'pd_annual_pd_plan' && ENTITY_CONFIGS[activeTab].table !== 'outlets' && ENTITY_CONFIGS[activeTab].table !== 'kru' && (
