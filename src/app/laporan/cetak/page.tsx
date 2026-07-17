@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { Loader2, Printer } from 'lucide-react';
 
-export default function CetakLaporanPage() {
+function CetakLaporanContent() {
   const searchParams = useSearchParams();
   const outletKode = searchParams.get('outlet') || '';
   const year = searchParams.get('year') || '2026';
@@ -84,10 +84,10 @@ export default function CetakLaporanPage() {
         </button>
       </div>
 
-      {/* DOKUMEN LAPORAN FISIK RESMI KOP SURAT A4 PORTRAIT (210mm x 297mm) [1] */}
+      {/* DOKUMEN LAPORAN FISIK RESMI KOP SURAT A4 PORTRAIT (210mm x 297mm) */}
       <div className="w-[800px] bg-white p-12 border border-brand-border shadow-2xl space-y-8 print:shadow-none print:border-none print:p-4">
         
-        {/* KOP SURAT RESMI PEOPLE DEVELOPMENT HARA CHICKEN [1] */}
+        {/* KOP SURAT RESMI PEOPLE DEVELOPMENT HARA CHICKEN */}
         <div className="flex items-center justify-between border-b-4 border-brand-red-dark pb-5">
           <div className="flex items-center gap-4">
             {/* Logo Geometris Minimalis */}
@@ -159,36 +159,4 @@ export default function CetakLaporanPage() {
           </p>
           {compCount > 0 ? (
             <p>
-              Terdapat <b>{compCount} keluhan pelanggan aktif</b> yang belum terselesaikan sepenuhnya. Divisi People Development merekomendasikan adanya sesi bimbingan praktik mandiri tambahan khusus bagi kru pelayanan kasir dan tim penyiapan menu krispi guna memitigasi risiko penurunan kualitas saji di outlet.
-            </p>
-          ) : (
-            <p>
-              Pencapaian luar biasa dicatat oleh seluruh kru, di mana keluhan pelanggan berhasil ditekan hingga angka nol pada penutupan periodisasi ini. Konsistensi kepatuhan kerja ini wajib dipertahankan.
-            </p>
-          )}
-        </div>
-
-        {/* TANDA TANGAN RESMI HA_IKAL ABI SATRIO [1] */}
-        <div className="pt-12 flex justify-end">
-          <div className="text-right w-56 text-xs">
-            <p className="text-brand-muted">Yogyakarta, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-            <div className="h-16 border-b border-brand-border flex items-end justify-center pb-2 italic text-brand-muted">
-              Haikal Abi Satrio
-            </div>
-            <p className="font-extrabold text-brand-ink mt-1">Haikal Abi Satrio</p>
-            <p className="text-[10px] text-brand-muted uppercase">People Development Manager</p>
-          </div>
-        </div>
-
-      </div>
-
-      <style jsx global>{`
-        @media print {
-          body { background-color: white !important; }
-          @page { size: A4 portrait; margin: 15mm; }
-          .print\\:hidden { display: none !important; }
-        }
-      `}</style>
-    </div>
-  );
-}
+              Terdapat <b>{compCount} keluhan pelanggan aktif</b> yang belum terselesaikan sepenuhnya. Divisi People Development merekomendasikan adanya sesi bimbingan bimbingan mandiri tambahan khusus bagi kru pelayana
