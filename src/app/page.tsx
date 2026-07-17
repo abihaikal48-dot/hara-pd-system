@@ -4,20 +4,34 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
-import { KeyRound, Mail, AlertCircle, Loader2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { KeyRound, Mail, AlertCircle, Loader2, ArrowRight, ShieldCheck, CheckCircle2, Sparkles, TrendingUp } from 'lucide-react';
 
-// LOGO SVG MINIMALIS ELEGAN: REPRESENTASI MUTU & GROWTH PEOPLE DEVELOPMENT HARA [1]
-const LogoPD = () => (
-  <svg className="w-12 h-12 shadow-md animate-pulse" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M50 5L85 25V60C85 79.3 70.1 91.8 50 95C29.9 91.8 15 79.3 15 60V25L50 5Z" fill="url(#goldGrad)" />
-    <path d="M42 35C45 35 48 38 48 42C48 45 45 48 42 48C39 48 36 45 36 42C36 38 39 35 42 35Z" fill="#8E2A1F" />
-    <path d="M50 20C55 20 60 25 60 31C60 37 55 42 50 42C45 42 40 37 40 31C40 25 45 20 50 20Z" fill="#C0392B" />
-    <path d="M50 45L65 65H35L50 45Z" fill="#FFF" opacity="0.9" />
-    <path d="M50 60V80" stroke="#FFF" strokeWidth="4" strokeLinecap="round" />
+// LOGO BARU: GEOMETRIS MINIMALIS ELEGAN (Sinergi Chicken Comb "Hara" & Upward Path "People Dev") [1]
+const LogoPDPro = () => (
+  <svg className="w-16 h-16 shadow-md drop-shadow-[0_4px_10px_rgba(244,180,0,0.25)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Lingkaran Luar Tipis Melambangkan Standar & Penjaminan Mutu */}
+    <circle cx="50" cy="50" r="45" stroke="url(#goldGrad)" strokeWidth="1.5" strokeDasharray="4 4" />
+    
+    {/* Jalur Panah Naik Melambangkan Progresi & Karir Karyawan (People Development) */}
+    <path d="M25 75 L45 50 L58 62 L75 35" stroke="url(#goldGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M75 35 H65 M75 35 V45" stroke="url(#goldGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    
+    {/* Kepala Ayam Abstrak Elegan (Hara) */}
+    <path d="M52 35 C52 28 58 22 66 22 C74 22 80 28 80 35 C80 42 74 48 66 48 C58 48 52 42 52 35 Z" fill="url(#crimsonGrad)" />
+    <path d="M60 22 C60 17 64 12 68 12 C72 12 76 17 76 22 Z" fill="#F4B400" /> {/* Jengger */}
+    <circle cx="70" cy="32" r="2.5" fill="#FFF" /> {/* Mata */}
+    
+    {/* Simbol Kuncup Daun Tumbuh Melambangkan Pembinaan Karyawan */}
+    <path d="M30 65 L45 45 L40 70 Z" fill="#F4B400" opacity="0.8" />
+    
     <defs>
       <linearGradient id="goldGrad" x1="15" y1="5" x2="85" y2="95" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stop-color="#FFDD7A" />
-        <stop offset="100%" stop-color="#F4B400" />
+        <stop offset="0%" stopColor="#FFDD7A" />
+        <stop offset="100%" stopColor="#F4B400" />
+      </linearGradient>
+      <linearGradient id="crimsonGrad" x1="52" y1="22" x2="80" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#C0392B" />
+        <stop offset="100%" stopColor="#8E2A1F" />
       </linearGradient>
     </defs>
   </svg>
@@ -73,7 +87,7 @@ export default function LoginPage() {
         
         <div className="max-w-md space-y-6 z-10 relative">
           <div className="flex items-center gap-3">
-            <LogoPD />
+            <LogoPDPro />
             <div>
               <h2 className="font-extrabold text-sm leading-none tracking-widest uppercase text-brand-yellow">Hara Chicken</h2>
               <p className="text-[10px] opacity-80 uppercase tracking-[2px] mt-1 font-semibold">People Development</p>
@@ -83,26 +97,26 @@ export default function LoginPage() {
           <div className="space-y-4 pt-4">
             <h1 className="text-3xl font-serif font-black leading-tight tracking-wide">
               Membina Kompetensi,<br />
-              Membangun Konsistensi,<br />
-              Mencapai Kemajuan.
+              Memastikan Konsistensi,<br />
+              Menjaga Cita Rasa.
             </h1>
-            <p className="text-xs text-white/80 leading-relaxed">
-              Platform terintegrasi untuk penjaminan mutu standar kerja operasional, evaluasi berkala kecakapan kru, perencanaan pelatihan, serta suksesi kepemimpinan outlet secara real-time.
+            <p className="text-xs text-white/85 leading-relaxed">
+              Selamat datang di portal penjaminan mutu operasional dan pengembangan kompetensi sumber daya manusia Hara Chicken. Kami berkomitmen untuk menyelaraskan keahlian kru dengan visi keunggulan pelayanan di setiap outlet.
             </p>
           </div>
 
-          <div className="space-y-3 pt-6 border-t border-white/10 text-xs">
+          <div className="space-y-3.5 pt-6 border-t border-white/10 text-xs">
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-brand-yellow flex-shrink-0" />
-              <span>Standarisasi Kepatuhan Kerja (SOP)</span>
+              <span>Standarisasi Kepatuhan Kerja (SOP Kitchen &amp; Service)</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-brand-yellow flex-shrink-0" />
-              <span>Analisis Kompetensi Kru 360°</span>
+              <span>Analisis Kompetensi Kru 360° &amp; Jalur Karir</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-brand-yellow flex-shrink-0" />
-              <span>Data Riwayat Tersinkronisasi Otomatis</span>
+              <span>Perencanaan Pelatihan Terstruktur Berbasis TNA</span>
             </div>
           </div>
         </div>
@@ -115,13 +129,13 @@ export default function LoginPage() {
           {/* Header Mobile Brand */}
           <div className="text-center lg:text-left space-y-2">
             <div className="flex justify-center lg:justify-start mb-4">
-              <LogoPD />
+              <LogoPDPro />
             </div>
             <h2 className="text-2xl font-black tracking-tight text-brand-ink dark:text-dark-ink">
-              Masuk Log Sistem PD
+              Portal Administrasi &amp; Mutu
             </h2>
             <p className="text-xs text-brand-muted dark:text-dark-muted font-medium leading-relaxed">
-              Silakan masukkan email kerja resmi Anda untuk mengakses dasbor penjaminan mutu People Development.
+              Gunakan akun resmi yang terdaftar untuk mengelola standardisasi operasional, kuis kognitif, evaluasi praktik, serta pelaporan suksesi outlet.
             </p>
           </div>
 
@@ -190,7 +204,7 @@ export default function LoginPage() {
           {/* Footer Lisensi */}
           <div className="flex items-center justify-center gap-2 text-[10px] text-brand-muted dark:text-dark-muted">
             <ShieldCheck className="w-4 h-4 text-brand-yellow" />
-            <span>Sistem Proteksi Enkripsi SSL Terenkripsi</span>
+            <span>Sistem Proteksi Enkripsi SSL Terintegrasi</span>
           </div>
         </div>
       </div>
