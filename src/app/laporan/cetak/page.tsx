@@ -3,11 +3,12 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, CheckSquare, AlertTriangle, FileText, Info } from 'lucide-react';
 
 function CetakLaporanContent() {
   const searchParams = useSearchParams();
   const outletKode = searchParams.get('outlet') || '';
+  const interval = searchParams.get('period') || 'bulanan'; // harian, mingguan, bulanan, tahunan
   const year = searchParams.get('year') || '2026';
 
   const [outlet, setOutlet] = useState<any>(null);
@@ -15,6 +16,11 @@ function CetakLaporanContent() {
   const [tnaCount, setTnaCount] = useState(0);
   const [compCount, setCompCount] = useState(0);
   const [bci, setBci] = useState(0);
+  
+  // Data Detail untuk Tabel Laporan Fisik Profesional
+  const [activeTnas, setActiveTnas] = useState<any[]>([]);
+  const [activeComplaints, setActiveComplaints] = useState<any[]>([]);
+  const [activeAudits, setActiveAudits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,30 +32,75 @@ function CetakLaporanContent() {
         setOutlet(ot);
 
         if (ot) {
-          // Ambil statistik periode bersangkutan
-          const { data: obs } = await supabase.from('observasi_lapangan').select('*').eq('outlet_id', ot.id);
-          const { count: tna } = await supabase.from('tna').select('*', { count: 'exact', head: true }).eq('outlet_id', ot.id).neq('status', 'Selesai');
-          const { count: comp } = await supabase.from('kartu_keluhan').select('*', { count: 'exact', head: true }).eq('outlet_id', ot.id).neq('status', 'Selesai');
+          // Atur tanggal penyaringan berdasarkan interval kueri [1]
+          const now = new Date();
+          const filterDate = new Date();
+          
+          if (interval.toLowerCase().includes('hari')) {
+            filterDate.setDate(now.getDate() - 1);
+          } else if (interval.toLowerCase().includes('minggu')) {
+            filterDate.setDate(now.getDate() - 7);
+          } else if (interval.toLowerCase().includes('bulan')) {
+            filterDate.setMonth(now.getMonth() - 1);
+          } else if (interval.toLowerCase().includes('tahun')) {
+            filterDate.setFullYear(now.getFullYear() - 1);
+          } else {
+            filterDate.setMonth(now.getMonth() - 1); // Default Bulanan
+          }
+
+          const isoDateString = filterDate.toISOString();
+
+          // Ambil statistik periode bersangkutan dari Supabase
+          const { data: obs } = await supabase
+            .from('observasi_lapangan')
+            .select('*')
+            .eq('outlet_id', ot.id)
+            .gte('created_at', isoDateString);
+
+          const { data: tna, count: tnaCountVal } = await supabase
+            .from('tna')
+            .select('*')
+            .eq('outlet_id', ot.id)
+            .neq('status', 'Selesai')
+            .gte('created_at', isoDateString);
+
+          const { data: comp, count: compCountVal } = await supabase
+            .from('kartu_keluhan')
+            .select('*')
+            .eq('outlet_id', ot.id)
+            .neq('status', 'Selesai')
+            .gte('created_at', isoDateString);
+
+          const { data: aud } = await supabase
+            .from('pd_audit_standar')
+            .select('*')
+            .eq('outlet_id', ot.id)
+            .gte('tanggal_audit', isoDateString.substring(0, 10))
+            .order('tanggal_audit', { ascending: false });
 
           setObsCount(obs?.length || 0);
-          setTnaCount(tna || 0);
-          setCompCount(comp || 0);
+          setTnaCount(tnaCountVal || 0);
+          setCompCount(compCountVal || 0);
+          setActiveTnas(tna || []);
+          setActiveComplaints(comp || []);
+          setActiveAudits(aud || []);
 
           const sesuai = (obs || []).filter(o => o.hasil === 'Sesuai Standar').length;
           setBci(obs?.length ? Math.round((sesuai / obs.length) * 100) : 0);
         }
       } catch (err) {
-        console.error(err);
+        console.error('Gagal memproses ekspor PDF', err);
       } finally {
         setLoading(false);
       }
     };
     fetchReportData();
-  }, [outletKode]);
+  }, [outletKode, interval]);
 
   useEffect(() => {
     if (outlet) {
-      const timer = setTimeout(() => { window.print(); }, 1200);
+      // Picu dialog cetak murni setelah halaman ter-render sempurna
+      const timer = setTimeout(() => { window.print(); }, 1500);
       return () => clearTimeout(timer);
     }
   }, [outlet]);
@@ -65,7 +116,7 @@ function CetakLaporanContent() {
   if (!outlet) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white text-xs text-brand-muted">
-        Parameter kueri outlet tidak valid atau belum terdaftar.
+        Parameter kueri pencarian outlet tidak valid atau belum terdaftar.
       </div>
     );
   }
@@ -73,8 +124,8 @@ function CetakLaporanContent() {
   return (
     <div className="min-h-screen bg-neutral-100 flex flex-col items-center p-6 print:bg-white print:p-0">
       
-      {/* Panduan Cetak Manual */}
-      <div className="mb-6 print:hidden">
+      {/* Panduan Cetak Manual - Tersembunyi saat dicetak */}
+      <div className="mb-6 print:hidden flex gap-3">
         <button 
           onClick={() => window.print()}
           className="bg-brand-red hover:bg-brand-red-dark text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-xs shadow-md"
@@ -85,9 +136,9 @@ function CetakLaporanContent() {
       </div>
 
       {/* DOKUMEN LAPORAN FISIK RESMI KOP SURAT A4 PORTRAIT (210mm x 297mm) */}
-      <div className="w-[800px] bg-white p-12 border border-brand-border shadow-2xl space-y-8 print:shadow-none print:border-none print:p-4">
+      <div className="w-[820px] bg-white p-12 border border-brand-border shadow-2xl space-y-6 print:shadow-none print:border-none print:p-4">
         
-        {/* KOP SURAT RESMI PEOPLE DEVELOPMENT HARA CHICKEN */}
+        {/* KOP SURAT RESMI DIVISION OF PEOPLE DEVELOPMENT - HARA CHICKEN [1] */}
         <div className="flex items-center justify-between border-b-4 border-brand-red-dark pb-5">
           <div className="flex items-center gap-4">
             {/* Logo Geometris Minimalis */}
@@ -104,79 +155,148 @@ function CetakLaporanContent() {
               <p className="text-[9px] text-brand-muted mt-1 leading-none italic">"Membina Kompetensi, Memastikan Konsistensi, Menjaga Cita Rasa."</p>
             </div>
           </div>
-          <div className="text-right text-[9px] text-brand-muted leading-relaxed font-medium">
+          <div className="text-right text-[9px] text-brand-muted leading-relaxed font-semibold">
+            <p>CV. ULTIMA RASA INDONESIA</p>
+            <p>SOP No: SOP/HC/09 - Standard Quality</p>
             <p>Yogyakarta, Indonesia</p>
-            <p>Email: recruitment_training_spv@haraChicken.com</p>
           </div>
         </div>
 
         {/* JUDUL LAPORAN */}
-        <div className="text-center">
-          <h2 className="text-sm font-black uppercase tracking-wider text-brand-ink">Laporan Kepatuhan Standar &amp; Pembinaan SDM</h2>
-          <p className="text-xs text-brand-muted mt-1">Periode Evaluasi Tahun Anggaran: {year}</p>
+        <div className="text-center space-y-1">
+          <h2 className="text-sm font-black uppercase tracking-wider text-brand-ink">Laporan Evaluasi &amp; Kepatuhan Mutu Outlet</h2>
+          <p className="text-xs text-brand-muted capitalize">Interval Laporan: {interval} ({year})</p>
         </div>
 
         {/* PROFIL OUTLET */}
-        <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-brand-bg text-xs">
+        <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-brand-bg text-xs border border-brand-border">
           <div>
-            <span className="block text-[9px] text-brand-muted font-bold uppercase tracking-wider">Nama Outlet</span>
-            <span className="font-extrabold text-brand-red-dark text-sm">{outlet.nama_outlet}</span>
+            <span className="block text-[9px] text-brand-muted font-black uppercase tracking-wider">Nama Outlet</span>
+            <span className="font-extrabold text-brand-red-dark text-sm">{outlet.nama_outlet} ({outlet.kode_outlet})</span>
           </div>
           <div>
-            <span className="block text-[9px] text-brand-muted font-bold uppercase tracking-wider">Kepala Outlet</span>
-            <span className="font-bold text-brand-ink">{outlet.kepala_outlet || '-'}</span>
+            <span className="block text-[9px] text-brand-muted font-black uppercase tracking-wider">Kepala Outlet</span>
+            <span className="font-bold text-brand-ink text-sm">{outlet.kepala_outlet || '-'}</span>
           </div>
         </div>
 
-        {/* METRIK DATA AKTUAL */}
+        {/* METRIK DATA AKTUAL (DIREPRESENTASIKAN DENGAN BOX ELEGAN UNTUK DI-PRINT) [1] */}
         <div className="space-y-3">
-          <h3 className="text-xs font-black uppercase text-brand-red-dark border-b border-brand-border pb-1">I. Ringkasan Kinerja Perilaku &amp; Kasus</h3>
+          <h3 className="text-xs font-black uppercase text-brand-red-dark border-b border-brand-border pb-1">I. Ringkasan Ketercapaian Indikator Kinerja</h3>
           <div className="grid grid-cols-4 gap-4 text-center">
             <div className="p-3 border border-brand-border rounded-xl">
-              <span className="block text-[9px] text-brand-muted font-bold uppercase">Nilai BCI</span>
-              <span className="text-lg font-black text-brand-red">{bci}%</span>
+              <span className="block text-[8px] text-brand-muted font-bold uppercase tracking-wider mb-1">Index Perilaku BCI</span>
+              <span className="text-xl font-black text-brand-red">{bci}%</span>
             </div>
             <div className="p-3 border border-brand-border rounded-xl">
-              <span className="block text-[9px] text-brand-muted font-bold uppercase">Sesi Observasi</span>
+              <span className="block text-[8px] text-brand-muted font-bold uppercase tracking-wider mb-1">Total Observasi</span>
               <span className="text-lg font-black text-brand-ink">{obsCount} Sesi</span>
             </div>
             <div className="p-3 border border-brand-border rounded-xl">
-              <span className="block text-[9px] text-brand-muted font-bold uppercase">TNA Aktif</span>
+              <span className="block text-[8px] text-brand-muted font-bold uppercase tracking-wider mb-1">Kesenjangan TNA</span>
               <span className="text-lg font-black text-brand-ink">{tnaCount} Kasus</span>
             </div>
             <div className="p-3 border border-brand-border rounded-xl">
-              <span className="block text-[9px] text-brand-muted font-bold uppercase">Keluhan Terbuka</span>
+              <span className="block text-[8px] text-brand-muted font-bold uppercase tracking-wider mb-1">Komplain Terbuka</span>
               <span className="text-lg font-black text-brand-ink">{compCount} Kasus</span>
             </div>
           </div>
         </div>
 
-        {/* NARASI EVALUASI OPERASIONAL */}
-        <div className="space-y-2 text-xs leading-relaxed text-brand-muted">
-          <h3 className="text-xs font-black uppercase text-brand-red-dark border-b border-brand-border pb-1">II. Catatan Evaluasi Naratif</h3>
-          <p>
-            Berdasarkan audit lapangan berkala yang dilaksanakan, indeks perubahan perilaku (Behavior Change Index) berada pada angka rata-rata <b>{bci}%</b>. Kondisi ini mencerminkan tingkat kepatuhan kerja tim yang berada dalam kategori yang memerlukan tinjauan berkelanjutan di bawah pengawasan Kepala Outlet.
-          </p>
-          {compCount > 0 ? (
-            <p>
-              Terdapat <b>{compCount} keluhan pelanggan aktif</b> yang belum terselesaikan sepenuhnya. Divisi People Development merekomendasikan adanya sesi bimbingan bimbingan mandiri tambahan khusus bagi kru pelayanan kasir dan tim penyiapan menu krispi guna memitigasi risiko penurunan kualitas saji di outlet.
-            </p>
+        {/* TABEL DATA DETAIL: TEMUAN TNA DAN KOMPLAIN PELANGGAN */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black uppercase text-brand-red-dark border-b border-brand-border pb-1">II. Temuan Kesenjangan Kompetensi Aktif (TNA)</h3>
+          {activeTnas.length === 0 ? (
+            <p className="text-xs text-brand-muted italic">Tidak ada temuan kesenjangan kompetensi aktif pada periode ini.</p>
           ) : (
-            <p>
-              Pencapaian luar biasa dicatat oleh seluruh kru, di mana keluhan pelanggan berhasil ditekan hingga angka nol pada penutupan periodisasi ini. Konsistensi kepatuhan kerja ini wajib dipertahankan.
-            </p>
+            <table className="w-full text-[11px] text-left border border-brand-border">
+              <thead>
+                <tr className="bg-brand-bg text-brand-red-dark border-b border-brand-border">
+                  <th className="p-2 font-bold w-1/4">Divisi</th>
+                  <th className="p-2 font-bold w-1/2">Deskripsi Gap</th>
+                  <th className="p-2 font-bold text-center">Prioritas</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-border/40">
+                {activeTnas.map((t, idx) => (
+                  <tr key={idx}>
+                    <td className="p-2 font-bold">{t.divisi}</td>
+                    <td className="p-2 text-brand-muted leading-relaxed">{t.deskripsi_gap}</td>
+                    <td className="p-2 text-center font-bold text-brand-red">{t.prioritas}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
 
-        {/* TANDA TANGAN RESMI HAIKAL ABI SATRIO */}
-        <div className="pt-12 flex justify-end">
+        {/* TABEL DATA DETAIL: DAFTAR KOMPLAIN PELANGGAN */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black uppercase text-brand-red-dark border-b border-brand-border pb-1">III. Log Keluhan Pelanggan Aktif</h3>
+          {activeComplaints.length === 0 ? (
+            <p className="text-xs text-brand-muted italic">Semua komplain pelanggan telah ditangani secara tuntas.</p>
+          ) : (
+            <table className="w-full text-[11px] text-left border border-brand-border">
+              <thead>
+                <tr className="bg-brand-bg text-brand-red-dark border-b border-brand-border">
+                  <th className="p-2 font-bold w-1/4">Shift</th>
+                  <th className="p-2 font-bold w-1/2">Keterangan Komplain</th>
+                  <th className="p-2 font-bold text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-border/40">
+                {activeComplaints.map((c, idx) => (
+                  <tr key={idx}>
+                    <td className="p-2 font-bold">{c.tanggal_shift}</td>
+                    <td className="p-2 text-brand-muted leading-relaxed">{c.deskripsi_keluhan}</td>
+                    <td className="p-2 text-center font-bold text-brand-red">{c.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* TABEL DATA DETAIL: HASIL AUDIT STANDAR OPERASIONAL */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black uppercase text-brand-red-dark border-b border-brand-border pb-1">IV. Hasil Kepatuhan Audit Kualitas</h3>
+          {activeAudits.length === 0 ? (
+            <p className="text-xs text-brand-muted italic">Belum ada aktivitas audit operasional terlaksana pada periode ini.</p>
+          ) : (
+            <table className="w-full text-[11px] text-left border border-brand-border">
+              <thead>
+                <tr className="bg-brand-bg text-brand-red-dark border-b border-brand-border">
+                  <th className="p-2 font-bold">Tanggal Audit</th>
+                  <th className="p-2 font-bold">Auditor</th>
+                  <th className="p-2 font-bold">Skor Kebersihan</th>
+                  <th className="p-2 font-bold">Skor Kecepatan</th>
+                  <th className="p-2 font-bold text-center">Rata-Rata</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-border/40">
+                {activeAudits.map((a, idx) => (
+                  <tr key={idx}>
+                    <td className="p-2 font-bold">{new Date(a.tanggal_audit).toLocaleDateString('id-ID')}</td>
+                    <td className="p-2">{a.auditor_lapangan}</td>
+                    <td className="p-2 text-center">{a.skor_kebersihan}/5</td>
+                    <td className="p-2 text-center">{a.skor_kecepatan}/5</td>
+                    <td className="p-2 text-center font-bold text-brand-red">{a.rata_rata_skor}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* TANDA TANGAN RESMI HAIKAL ABI SATRIO - PEOPLE DEVELOPMENT [1] */}
+        <div className="pt-10 flex justify-end">
           <div className="text-right w-56 text-xs">
             <p className="text-brand-muted">Yogyakarta, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <div className="h-16 border-b border-brand-border flex items-end justify-center pb-2 italic text-brand-muted">
               Haikal Abi Satrio
             </div>
             <p className="font-extrabold text-brand-ink mt-1">Haikal Abi Satrio</p>
-            <p className="text-[10px] text-brand-muted uppercase">People Development Manager</p>
+            <p className="text-[10px] text-brand-muted uppercase">People Development</p>
           </div>
         </div>
 
