@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,10 +9,11 @@ import { useAuth } from '@/context/AuthContext';
 import { 
   LayoutDashboard, Database, Users2, ShieldAlert, CalendarRange, Eye, 
   MessageSquare, TrendingUp, AlertOctagon, Star, BookOpen, HelpCircle, 
-  FileText, Settings, LogOut, ChevronDown, Award, DollarSign, Target, 
+  FileText, Settings, LogOut, ChevronDown, Award, Target, 
   ClipboardList, Sliders, Bookmark, X, Menu, Bell, Sun, Moon, Plus, 
-  Edit2, Trash2, Search, Loader2, CheckCircle, Info, Download, Printer,
-  UserCheck, Users, Play, Check, Shield, Flame, ClipboardCheck, History, Activity, AlertCircle
+  Edit2, Trash2, Search, Loader2, CheckCircle2, Info, Download, Printer,
+  UserCheck, Users, Play, Check, Shield, Flame, ClipboardCheck, History, Activity, AlertCircle,
+  Sparkles, Clock, LifeBuoy, BarChart3
 } from 'lucide-react';
 
 const AVATAR_COLORS = ['#C0392B', '#F4B400', '#8E2A1F', '#E67E22', '#2E86AB', '#6C3483', '#16A085'];
@@ -29,18 +31,24 @@ function avatarColorOf(name: string) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-// LOGO SVG MINIMALIS ELEGAN KUSTOM REPRESENTASI PEOPLE DEVELOPMENT HARA [1]
-const LogoPD = () => (
-  <svg className="w-10 h-10 shadow-lg animate-pulse" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M50 5L85 25V60C85 79.3 70.1 91.8 50 95C29.9 91.8 15 79.3 15 60V25L50 5Z" fill="url(#goldGrad)" />
-    <path d="M42 35C45 35 48 38 48 42C48 45 45 48 42 48C39 48 36 45 36 42C36 38 39 35 42 35Z" fill="#8E2A1F" />
-    <path d="M50 20C55 20 60 25 60 31C60 37 55 42 50 42C45 42 40 37 40 31C40 25 45 20 50 20Z" fill="#C0392B" />
-    <path d="M50 45L65 65H35L50 45Z" fill="#FFF" opacity="0.9" />
-    <path d="M50 60V80" stroke="#FFF" strokeWidth="4" strokeLinecap="round" />
+// LOGO BARU: GEOMETRIS MINIMALIS ELEGAN (Chicken Comb + growth path) [1]
+const LogoPDPro = () => (
+  <svg className="w-10 h-10 shadow-lg drop-shadow-[0_4px_10px_rgba(244,180,0,0.25)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="45" stroke="url(#goldGrad)" strokeWidth="1.5" strokeDasharray="4 4" />
+    <path d="M25 75 L45 50 L58 62 L75 35" stroke="url(#goldGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M75 35 H65 M75 35 V45" stroke="url(#goldGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M52 35 C52 28 58 22 66 22 C74 22 80 28 80 35 C80 42 74 48 66 48 C58 48 52 42 52 35 Z" fill="url(#crimsonGrad)" />
+    <path d="M60 22 C60 17 64 12 68 12 C72 12 76 17 76 22 Z" fill="#F4B400" />
+    <circle cx="70" cy="32" r="2.5" fill="#FFF" />
+    <path d="M30 65 L45 45 L40 70 Z" fill="#F4B400" opacity="0.8" />
     <defs>
       <linearGradient id="goldGrad" x1="15" y1="5" x2="85" y2="95" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stop-color="#FFDD7A" />
-        <stop offset="100%" stop-color="#F4B400" />
+        <stop offset="0%" stopColor="#FFDD7A" />
+        <stop offset="100%" stopColor="#F4B400" />
+      </linearGradient>
+      <linearGradient id="crimsonGrad" x1="52" y1="22" x2="80" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#C0392B" />
+        <stop offset="100%" stopColor="#8E2A1F" />
       </linearGradient>
     </defs>
   </svg>
@@ -48,12 +56,13 @@ const LogoPD = () => (
 
 // =========================================================
 // UNIFIED DYNAMIC CRUD ENGINE SCHEMA DEFINITION [1]
+// (FUNGSI ANGGARAN DISKIP / DISEMBUNYIKAN SECARA TOTAL)
 // =========================================================
 const ENTITY_CONFIGS: Record<string, {
   table: string;
   title: string;
   desc: string;
-  selectQuery: string; // UNTUK MENGATASI GALAT RELATIONSHIP SUPABASE SECARA SPESIFIK & AMAN
+  selectQuery: string;
   fields: Array<{ name: string; label: string; type: 'text' | 'textarea' | 'select' | 'number' | 'date'; options?: string[] }>;
   columns: string[];
 }> = {
@@ -243,19 +252,6 @@ const ENTITY_CONFIGS: Record<string, {
     ],
     columns: ['kru_id', 'tanggal_mulai', 'tahap_onboarding', 'status_checklist']
   },
-  budget: {
-    table: 'pd_budget_cost',
-    title: 'Training Budget & Cost Tracker',
-    desc: 'Audit efisiensi anggaran dan realisasi biaya program pelatihan.',
-    selectQuery: '*, outlets!outlet_id(nama_outlet)',
-    fields: [
-      { name: 'topik_training', label: 'Topik Pelatihan', type: 'text' },
-      { name: 'anggaran', label: 'Anggaran Dialokasikan', type: 'number' },
-      { name: 'realisasi', label: 'Realisasi Biaya', type: 'number' },
-      { name: 'catatan_pengeluaran', label: 'Catatan Pengeluaran', type: 'textarea' }
-    ],
-    columns: ['topik_training', 'anggaran', 'realisasi', 'selisih']
-  },
   pip: {
     table: 'pd_pip_log',
     title: 'Performance Improvement Plan (PIP)',
@@ -427,6 +423,10 @@ export default function UnifiedDashboardPage() {
   const [repMonth, setRepMonth] = useState('7');
   const [repYear, setRepYear] = useState('2026');
 
+  // Pengaturan State
+  const [settingsList, setSettingsList] = useState<any[]>([]);
+  const [savingSettings, setSavingSettings] = useState(false);
+
   // =========================================================
   // FUNGSI PEMBANTU UTAMA (DISEJAJARKAN DI ATAS AGAR BEBAS ERROR)
   // =========================================================
@@ -519,6 +519,10 @@ export default function UnifiedDashboardPage() {
       setAuditScores(aud || []);
       setActivityLogs(logs || []);
 
+      // Ambil Pengaturan
+      const { data: setts } = await supabase.from('settings').select('*');
+      setSettingsList(setts || []);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -544,6 +548,22 @@ export default function UnifiedDashboardPage() {
       alert('Gagal memuat tabel: ' + err.message);
     } finally {
       setDynamicLoading(false);
+    }
+  };
+
+  // Simpan Pembaruan Konfigurasi Pengaturan Global
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      for (const s of settingsList) {
+        await supabase.from('settings').update({ value: s.value }).eq('id', s.id);
+      }
+      alert('Konfigurasi pengaturan global berhasil diperbarui!');
+      loadSystemData();
+    } catch (err: any) {
+      alert('Gagal menyimpan pengaturan: ' + err.message);
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -906,7 +926,7 @@ export default function UnifiedDashboardPage() {
       `}>
         <div className="flex items-center justify-between mb-6 pb-2 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <LogoPD />
+            <LogoPDPro />
             <div>
               <h1 className="font-extrabold text-sm leading-none tracking-wide">Hara Chicken</h1>
               <p className="text-[9px] opacity-80 uppercase tracking-[2px] mt-1 font-semibold">People Dev</p>
@@ -1022,7 +1042,6 @@ export default function UnifiedDashboardPage() {
                 { key: 'evaluasi_reaksi', label: '📋 Evaluasi L1' },
                 { key: 'pre_post', label: '📊 Pre/Post Test' },
                 { key: 'onboarding', label: '🚀 Onboarding' },
-                { key: 'budget', label: '💰 Budget Training' },
                 { key: 'pip', label: '⚖️ PIP Kinerja' },
                 { key: 'kamus', label: '📖 Kamus Kompetensi' },
                 { key: 'audit', label: '🔍 Audit Operasional' },
@@ -1088,6 +1107,17 @@ export default function UnifiedDashboardPage() {
               </button>
             </div>
           </div>
+
+          {/* MENU SETTINGS / PENGATURAN GLOBAL TERPISAH [1] */}
+          <div className="pt-2 border-t border-white/10">
+            <button 
+              onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all ${activeTab === 'settings' ? 'bg-white text-brand-red-dark font-bold' : 'text-white/80 hover:bg-white/10'}`}
+            >
+              <Settings className="w-4 h-4" />
+              <span>Pengaturan</span>
+            </button>
+          </div>
         </div>
 
         <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
@@ -1117,7 +1147,7 @@ export default function UnifiedDashboardPage() {
             </button>
             <div>
               <h2 className="text-sm font-black capitalize text-brand-ink dark:text-dark-ink">
-                {ENTITY_CONFIGS.hasOwnProperty(activeTab) ? ENTITY_CONFIGS[activeTab].title : `${activeTab} Panel`}
+                {ENTITY_CONFIGS.hasOwnProperty(activeTab) ? ENTITY_CONFIGS[activeTab].title : (activeTab === 'settings' ? 'Pengaturan Global' : `${activeTab} Panel`)}
               </h2>
               <p className="text-[10px] text-brand-muted hidden xs:block">HARA-PD System Pro v2</p>
             </div>
@@ -1134,7 +1164,7 @@ export default function UnifiedDashboardPage() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20">
           <div className="max-w-7xl mx-auto animate-fade-slide-in">
             
-            {/* 1. TAB: DASHBOARD (UPGRADE TOTAL PROFESIONAL) [1] */}
+            {/* 1. TAB: DASHBOARD (NARRATIVE ANALYSIS & METRICS EXPANSION) [1] */}
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
                 {/* Banner Gradasi Koki */}
@@ -1168,6 +1198,33 @@ export default function UnifiedDashboardPage() {
                         <rect x="230" y="66" width="40" height="15" rx="7" fill="#ffffff" opacity="0.9" />
                       </g>
                     </svg>
+                  </div>
+                </div>
+
+                {/* DYNAMIC NARRATIVE ANALYSIS PANEL (ANALISIS KALIMAT DIAGNOSTIK) [1] */}
+                <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border dark:border-dark-border space-y-3.5 shadow-sm">
+                  <div className="flex items-center gap-2 text-brand-red font-black text-xs uppercase tracking-wider">
+                    <Sparkles className="w-4.5 h-4.5" />
+                    <span>Laporan Narasi &amp; Analisis Diagnostik Sistem</span>
+                  </div>
+                  <div className="text-xs space-y-3 text-brand-ink leading-relaxed">
+                    <p>
+                      📌 Berdasarkan data riwayat tersimpan, tingkat keaktifan mutasi operasional saat ini mencakup <b>{stats.totalOutlet} Outlet aktif</b> dengan kapasitas pembinaan sebanyak <b>{stats.totalKru} Kru terdaftar</b>. Secara umum, pemantauan indikator perilaku di lapangan menunjukkan kondisi stabil.
+                    </p>
+                    {stats.complaintOpen > 0 ? (
+                      <p className="p-2.5 bg-brand-red/5 border border-brand-red/10 rounded-lg text-brand-red-dark">
+                        ⚠️ <b>Analisis Komplain:</b> Tercatat ada <b>{stats.complaintOpen} keluhan pelanggan aktif</b> yang membutuhkan tindakan perbaikan mendesak. Rekomendasi tindakan: Evaluasi kepatuhan naskah greeting kasir (SOP-KAS-01) dan perketat standar waktu saji di dapur.
+                      </p>
+                    ) : (
+                      <p className="p-2.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 rounded-lg">
+                        ✅ <b>Status Keluhan:</b> Luar biasa! Seluruh komplain operasional pelanggan telah diselesaikan 100% oleh tim di lapangan. Pertahankan konsistensi kualitas layanan.
+                      </p>
+                    )}
+                    {stats.tnaOpen > 0 && (
+                      <p className="p-2.5 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-500 rounded-lg">
+                        🔴 <b>Prioritas Pelatihan:</b> Ditemukan kesenjangan kompetensi tinggi pada {stats.tnaOpen} sesi TNA terbuka. Manajer operasional disarankan untuk segera menggelar sesi bimbingan praktik mandiri bagi divisi dapur (Kitchen).
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1267,10 +1324,101 @@ export default function UnifiedDashboardPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* UPGRADE WIDGET: PUSAT PANDUAN & CONTOH KASUS OPERASIONAL [1] */}
+                <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border">
+                  <h2 className="text-xs font-black text-brand-muted uppercase mb-4 flex items-center gap-2">
+                    <LifeBuoy className="w-4.5 h-4.5 text-brand-yellow animate-spin" />
+                    <span>Panduan Pengisian Kasus &amp; Kondisi (SOP Mutu)</span>
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div className="p-3.5 bg-brand-bg dark:bg-dark-bg/60 border border-brand-border/40 rounded-xl space-y-2">
+                      <span className="font-extrabold text-brand-red block">📝 Kasus 1: TNA Kesenjangan</span>
+                      <p className="text-brand-muted text-[11px] leading-relaxed">
+                        <b>Kondisi:</b> Kru memasak nasi terlalu lembek akibat takaran air tidak sesuai SOP dapur.<br />
+                        <b>Formulir RTL:</b> "Gelar re-training memasak nasi (SOP-KIT-01) bagi seluruh kru dapur shift pagi."
+                      </p>
+                    </div>
+                    <div className="p-3.5 bg-brand-bg dark:bg-dark-bg/60 border border-brand-border/40 rounded-xl space-y-2">
+                      <span className="font-extrabold text-brand-yellow block">💬 Kasus 2: Coaching GROW</span>
+                      <p className="text-brand-muted text-[11px] leading-relaxed">
+                        <b>Kondisi:</b> Kecepatan saji kasir lambat saat jam padat.<br />
+                        <b>Formulir GROW:</b> G = Saji dibawah 3 menit. R = Kurang fokus alat POS. O = Pasang catatan tempel. W = Praktikkan di shift malam.
+                      </p>
+                    </div>
+                    <div className="p-3.5 bg-brand-bg dark:bg-dark-bg/60 border border-brand-border/40 rounded-xl space-y-2">
+                      <span className="font-extrabold text-emerald-600 block">🛎️ Kasus 3: Keluhan Pelanggan</span>
+                      <p className="text-brand-muted text-[11px] leading-relaxed">
+                        <b>Kondisi:</b> Pelanggan komplain rasa sambal bawang terlalu asin.<br />
+                        <b>Tipe Keluhan:</b> A (Segera Diatasi).<br />
+                        <b>Tindakan:</b> "Minta maaf secara tulus, tarik porsi lama, sajikan sambal baru dengan resep pas."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 
-            {/* ===== CORE ENGINE: DYNAMIC RENDERING UNTUK 19 TAB MAS_TER & PD SISTEM LAIN ===== */}
+            {/* 2. TAB: MASTER OUTLET */}
+            {activeTab === 'outlets' && (
+              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-sm font-black">Daftar Master Outlet</h2>
+                  <button onClick={() => { setActiveTab('outlets'); handleOpenDynamicModal(); }} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
+                    <Plus className="w-4 h-4" /> Tambah
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-brand-border pb-2 text-brand-muted"><th className="pb-2">Kode</th><th className="pb-2">Nama Outlet</th><th className="pb-2">Kepala</th><th className="pb-2">Status</th></tr>
+                    </thead>
+                    <tbody>
+                      {outlets.map((o) => (
+                        <tr key={o.id} className="border-b border-brand-border/40 hover:bg-brand-bg/50">
+                          <td className="py-3 font-bold text-brand-red-dark">{o.kode_outlet}</td>
+                          <td className="py-3 font-bold">{o.nama_outlet}</td>
+                          <td className="py-3">{o.kepala_outlet || '-'}</td>
+                          <td className="py-3"><span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">{o.status_aktif ? 'Aktif' : 'Nonaktif'}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 3. TAB: MASTER KRU */}
+            {activeTab === 'kru' && (
+              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-sm font-black">Daftar Master Kru</h2>
+                  <button onClick={() => { setActiveTab('kru'); handleOpenDynamicModal(); }} className="bg-brand-red text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 shadow-md">
+                    <Plus className="w-4 h-4" /> Tambah
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-brand-border pb-2 text-brand-muted"><th className="pb-2">Nama Kru</th><th className="pb-2">Divisi</th><th className="pb-2">Outlet</th><th className="pb-2">Status</th></tr>
+                    </thead>
+                    <tbody>
+                      {kruList.map((k) => (
+                        <tr key={k.id} className="border-b border-brand-border/40 hover:bg-brand-bg/50">
+                          <td className="py-3 font-bold">{k.nama_kru}</td>
+                          <td className="py-3 font-semibold text-brand-red">{k.divisi}</td>
+                          <td className="py-3">{k.outlets?.nama_outlet || '-'}</td>
+                          <td className="py-3"><span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">{k.status_aktif ? 'Aktif' : 'Resign'}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* ===== CORE ENGINE: DYNAMIC RENDERING UNTUK 17 MODUL PD SISTEM LAIN ===== */}
             {ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
               <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
@@ -1407,7 +1555,7 @@ export default function UnifiedDashboardPage() {
 
                 {quizResult && (
                   <div className="space-y-4 text-center animate-fade-slide-in">
-                    <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-full"><CheckCircle className="w-10 h-10" /></div>
+                    <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-full"><CheckCircle2 className="w-10 h-10" /></div>
                     <h3 className="font-extrabold text-sm text-brand-ink">Ujian Teori Selesai!</h3>
                     <div className="p-3 bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-xl max-w-xs mx-auto flex justify-between text-xs">
                       <div className="text-left"><p className="text-[10px] text-brand-muted font-bold uppercase">Skor</p><p className="font-bold text-brand-red text-base">{quizResult.skor}%</p></div>
@@ -1581,6 +1729,51 @@ export default function UnifiedDashboardPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* ===== 9. TAB BARU: MODUL PENGATURAN GLOBAL TERPISAH [1] ===== */}
+            {activeTab === 'settings' && (
+              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in space-y-5">
+                <div>
+                  <h2 className="text-sm font-black flex items-center gap-1.5">
+                    <Settings className="w-4 h-4 text-brand-red" />
+                    <span>Konfigurasi Threshold &amp; Keamanan Global</span>
+                  </h2>
+                  <p className="text-[11px] text-brand-muted mt-1 leading-relaxed">Kelola batasan minimum metrik BCI, target kognitif kelulusan, dan alamat pengiriman laporan sistem harian.</p>
+                </div>
+
+                {settingsList.length === 0 ? (
+                  <p className="text-xs text-brand-muted text-center py-6">Gagal memuat daftar parameter pengaturan cloud.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {settingsList.map((set, idx) => (
+                      <div key={idx} className="p-3.5 bg-brand-bg dark:bg-dark-bg/60 border border-brand-border/40 rounded-xl space-y-1.5">
+                        <label className="block text-[9px] font-black text-brand-red-dark dark:text-brand-yellow uppercase tracking-wider">{set.key.replace(/_/g, ' ')}</label>
+                        <input 
+                          type="text"
+                          value={set.value}
+                          onChange={(e) => {
+                            const updated = [...settingsList];
+                            updated[idx].value = e.target.value;
+                            setSettingsList(updated);
+                          }}
+                          className="w-full p-2.5 text-xs bg-white dark:bg-dark-card border border-brand-border rounded-xl focus:outline-none"
+                        />
+                        <span className="block text-[9px] text-brand-muted italic leading-relaxed">{set.keterangan || 'Tidak ada uraian'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleSaveSettings}
+                  disabled={savingSettings}
+                  className="w-full bg-brand-red hover:bg-brand-red-dark text-white font-bold py-3 rounded-xl flex items-center justify-center gap-1.5 text-xs shadow-md"
+                >
+                  {savingSettings && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>Simpan Perubahan Pengaturan</span>
+                </button>
               </div>
             )}
 
