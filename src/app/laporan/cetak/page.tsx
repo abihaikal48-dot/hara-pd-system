@@ -159,4 +159,49 @@ function CetakLaporanContent() {
           </p>
           {compCount > 0 ? (
             <p>
-              Terdapat <b>{compCount} keluhan pelanggan aktif</b> yang belum terselesaikan sepenuhnya. Divisi People Development merekomendasikan adanya sesi bimbingan bimbingan mandiri tambahan khusus bagi kru pelayana
+              Terdapat <b>{compCount} keluhan pelanggan aktif</b> yang belum terselesaikan sepenuhnya. Divisi People Development merekomendasikan adanya sesi bimbingan bimbingan mandiri tambahan khusus bagi kru pelayanan kasir dan tim penyiapan menu krispi guna memitigasi risiko penurunan kualitas saji di outlet.
+            </p>
+          ) : (
+            <p>
+              Pencapaian luar biasa dicatat oleh seluruh kru, di mana keluhan pelanggan berhasil ditekan hingga angka nol pada penutupan periodisasi ini. Konsistensi kepatuhan kerja ini wajib dipertahankan.
+            </p>
+          )}
+        </div>
+
+        {/* TANDA TANGAN RESMI HAIKAL ABI SATRIO */}
+        <div className="pt-12 flex justify-end">
+          <div className="text-right w-56 text-xs">
+            <p className="text-brand-muted">Yogyakarta, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <div className="h-16 border-b border-brand-border flex items-end justify-center pb-2 italic text-brand-muted">
+              Haikal Abi Satrio
+            </div>
+            <p className="font-extrabold text-brand-ink mt-1">Haikal Abi Satrio</p>
+            <p className="text-[10px] text-brand-muted uppercase">People Development Manager</p>
+          </div>
+        </div>
+
+      </div>
+
+      <style jsx global>{`
+        @media print {
+          body { background-color: white !important; }
+          @page { size: A4 portrait; margin: 15mm; }
+          .print\\:hidden { display: none !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// WRAPPER UTAMA SUSPENSE WRAPPER [1]
+export default function CetakLaporanPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-red" />
+      </div>
+    }>
+      <CetakLaporanContent />
+    </Suspense>
+  );
+}
