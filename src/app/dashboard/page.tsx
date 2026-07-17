@@ -557,7 +557,18 @@ export default function UnifiedDashboardPage() {
       // Ambil Pengaturan (Isolasi Khusus Agar Tidak Crash jika Belum di-Seed) [1]
       try {
         const { data: setts } = await supabase.from('settings').select('*');
-        setSettingsList(setts || []);
+        if (setts && setts.length > 0) {
+          setSettingsList(setts);
+        } else {
+          // Fallback default client-side if database table is empty
+          setSettingsList([
+            { id: '1', key: 'EMAIL_SPV', value: 'recruitment_training_spv@harachicken.com', keterangan: 'Email SPV/Manager' },
+            { id: '2', key: 'EMAIL_SELF', value: 'abihaikal48@gmail.com', keterangan: 'Email People Development (Haikal Abi Satrio)' },
+            { id: '3', key: 'THRESHOLD_BCI', value: '60', keterangan: 'Batas minimal persentase BCI Kelayakan' },
+            { id: '4', key: 'THRESHOLD_NGAIN', value: '0.3', keterangan: 'Batas minimal N-Gain kognitif' },
+            { id: '5', key: 'FOLDER_LAPORAN', value: 'Laporan PD Hara Chicken', keterangan: 'Nama folder penyimpanan PDF' }
+          ]);
+        }
       } catch (err) {
         console.warn("Tabel settings belum siap atau kosong");
       }
@@ -612,6 +623,40 @@ export default function UnifiedDashboardPage() {
       loadDynamicRows(activeTab);
     }
   }, [activeTab]);
+
+  // Memuat Profil Kru 360 saat Dropdown Dipilih
+  useEffect(() => {
+    if (!profileKruId) return;
+    const fetchProfil = async () => {
+      setProfileLoading(true);
+      try {
+        const { data: prof } = await supabase.from('kru').select('*, outlets!outlet_id(nama_outlet)').eq('id', profileKruId).single();
+        setProfileKruData(prof);
+
+        const { data: obs } = await supabase.from('observasi_lapangan').select('*').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+        const { data: coa } = await supabase.from('coaching_log').select('*').eq('kru_id', profileKruId).order('tanggal', { ascending: false });
+        const { data: gap } = await supabase.from('gap_analysis').select('*').eq('kru_id', profileKruId);
+        const { data: teo } = await supabase.from('penilaian_teori').select('*').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+        const { data: pra } = await supabase.from('penilaian_praktik').select('*, bank_sop(judul_sop)').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+        const { data: lis } = await supabase.from('penilaian_lisan').select('*, bank_sop(judul_sop)').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+
+        setProfileHistory({ observasi: obs || [], coaching: coa || [], gap: gap || [], teori: teo || [], praktik: pra || [], lisan: lis || [] });
+
+        const sesuaiCount = (obs || []).filter(o => o.hasil === 'Sesuai Standar').length;
+        setProfileMetrics({
+          bci: (obs || []).length ? Math.round((sesuaiCount / (obs || []).length) * 100) : null,
+          avgTeori: (teo || []).length ? Math.round((teo || []).reduce((a,b)=>a+Number(b.skor),0)/(teo || []).length) : null,
+          avgPraktik: (pra || []).length ? Number(((pra || []).reduce((a,b)=>a+Number(b.skor_total),0)/(pra || []).length).toFixed(2)) : null,
+          avgLisan: (lis || []).length ? Math.round((lis || []).reduce((a,b)=>a+Number(b.persentase_paham),0)/(lis || []).length) : null,
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    fetchProfil();
+  }, [profileKruId]);
 
   // =========================================================
   // SISTEM SINKRONISASI LOGIKA DETIL KRU (AUTO-POPULATE) [1]
