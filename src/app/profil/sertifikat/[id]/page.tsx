@@ -21,7 +21,7 @@ export default function SertifikatCetakPage() {
           .single();
         if (data) setKru(data);
       } catch (err) {
-        console.error(err);
+        console.error('Gagal memuat sertifikat', err);
       } finally {
         setLoading(false);
       }
@@ -57,7 +57,8 @@ export default function SertifikatCetakPage() {
 
   return (
     <div className="min-h-screen bg-neutral-100 flex flex-col items-center justify-center p-4 print:bg-white print:p-0">
-      {/* Tombol Panduan Cetak Manual - Tersembunyi saat Cetak PDF */}
+      
+      {/* Tombol Panduan Cetak Manual */}
       <div className="mb-6 print:hidden flex gap-3">
         <button 
           onClick={() => window.print()} 
@@ -95,7 +96,7 @@ export default function SertifikatCetakPage() {
           </p>
         </div>
 
-        {/* Tanggal & Tandatangan */}
+        {/* Tanggal & Tandatangan (Haikal Abi Satrio - People Development) [1] */}
         <div className="w-full flex justify-between px-16 border-t border-brand-border pt-6">
           <div className="text-left">
             <span className="block text-[10px] text-brand-muted font-bold uppercase tracking-wider">Tanggal Terbit</span>
@@ -103,9 +104,9 @@ export default function SertifikatCetakPage() {
           </div>
           <div className="text-right">
             <div className="h-10 w-28 border-b-2 border-brand-border mx-auto flex items-center justify-center italic text-brand-muted text-xs">
-              Haikal K.
+              Haikal Abi Satrio
             </div>
-            <span className="block text-[10px] text-brand-muted font-bold uppercase tracking-wider mt-1.5">People Development Manager</span>
+            <span className="block text-[10px] text-brand-muted font-bold uppercase tracking-wider mt-1.5">People Development</span>
           </div>
         </div>
 
