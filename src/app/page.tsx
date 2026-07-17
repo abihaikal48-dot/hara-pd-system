@@ -4,26 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
-import { KeyRound, Mail, AlertCircle, Loader2, ArrowRight, ShieldCheck, CheckCircle2, Sparkles, TrendingUp } from 'lucide-react';
+import { KeyRound, Mail, AlertCircle, Loader2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
-// LOGO BARU: GEOMETRIS MINIMALIS ELEGAN (Sinergi Chicken Comb "Hara" & Upward Path "People Dev") [1]
+// LOGO GEOMETRIS MINIMALIS ELEGAN: Sinergi Chicken Comb & Upward Path People Dev
 const LogoPDPro = () => (
   <svg className="w-16 h-16 shadow-md drop-shadow-[0_4px_10px_rgba(244,180,0,0.25)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {/* Lingkaran Luar Tipis Melambangkan Standar & Penjaminan Mutu */}
     <circle cx="50" cy="50" r="45" stroke="url(#goldGrad)" strokeWidth="1.5" strokeDasharray="4 4" />
-    
-    {/* Jalur Panah Naik Melambangkan Progresi & Karir Karyawan (People Development) */}
     <path d="M25 75 L45 50 L58 62 L75 35" stroke="url(#goldGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
     <path d="M75 35 H65 M75 35 V45" stroke="url(#goldGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-    
-    {/* Kepala Ayam Abstrak Elegan (Hara) */}
     <path d="M52 35 C52 28 58 22 66 22 C74 22 80 28 80 35 C80 42 74 48 66 48 C58 48 52 42 52 35 Z" fill="url(#crimsonGrad)" />
-    <path d="M60 22 C60 17 64 12 68 12 C72 12 76 17 76 22 Z" fill="#F4B400" /> {/* Jengger */}
-    <circle cx="70" cy="32" r="2.5" fill="#FFF" /> {/* Mata */}
-    
-    {/* Simbol Kuncup Daun Tumbuh Melambangkan Pembinaan Karyawan */}
+    <path d="M60 22 C60 17 64 12 68 12 C72 12 76 17 76 22 Z" fill="#F4B400" />
+    <circle cx="70" cy="32" r="2.5" fill="#FFF" />
     <path d="M30 65 L45 45 L40 70 Z" fill="#F4B400" opacity="0.8" />
-    
     <defs>
       <linearGradient id="goldGrad" x1="15" y1="5" x2="85" y2="95" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stopColor="#FFDD7A" />
@@ -80,7 +72,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-brand-bg dark:bg-dark-bg flex flex-col lg:flex-row transition-colors duration-200">
       
-      {/* SISI KIRI: BRANDING & SOPHISTICATED COPY */}
+      {/* SISI KIRI: BRANDING & SOPHISTICATED COPY (Hanya Tampil di PC) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#4A1810] via-brand-red-dark to-brand-red relative items-center justify-center p-12 text-white overflow-hidden animate-gradient-shift">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(244,180,0,0.15),transparent_50%)]" />
         <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full bg-brand-yellow/10 blur-3xl" />
@@ -122,8 +114,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* SISI KANAN: SOPHISTICATED LOGIN CARD */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+      {/* SISI KANAN: LOGIN CARD (DIPERBAIKI PENUH UNTUK MOBILE & PC) */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 min-h-screen lg:min-h-0">
         <div className="w-full max-w-sm space-y-8 animate-fade-slide-in">
           
           {/* Header Mobile Brand */}
