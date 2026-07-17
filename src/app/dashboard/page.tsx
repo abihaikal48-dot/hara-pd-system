@@ -12,9 +12,7 @@ import {
   FileText, Settings, LogOut, ChevronDown, Award, DollarSign, Target, 
   ClipboardList, Sliders, Bookmark, X, Menu, Bell, Sun, Moon, Plus, 
   Edit2, Trash2, Search, Loader2, CheckCircle2, Info, Download, Printer,
-  UserCheck, Users, Play, Check, Shield, Flame, BookmarkCheck, CalendarDays,
-  History, UsersRound, HelpCircle as HelpIcon, FileSpreadsheet, RefreshCw,
-  Activity, AlertCircle, Sparkles, LifeBuoy
+  UserCheck, Users, Play, Check, Shield, Flame, Activity, AlertCircle, Sparkles, LifeBuoy
 } from 'lucide-react';
 
 const AVATAR_COLORS = ['#C0392B', '#F4B400', '#8E2A1F', '#E67E22', '#2E86AB', '#6C3483', '#16A085'];
@@ -32,7 +30,7 @@ function avatarColorOf(name: string) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-// LOGO BARU: GEOMETRIS MINIMALIS ELEGAN
+// LOGO BARU: GEOMETRIS MINIMALIS ELEGAN (Sinergi Chicken Comb "Hara" & Upward Path "People Dev") [1]
 const LogoPDPro = () => (
   <svg className="w-10 h-10 shadow-lg drop-shadow-[0_4px_10px_rgba(244,180,0,0.25)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="50" cy="50" r="45" stroke="url(#goldGrad)" strokeWidth="1.5" strokeDasharray="4 4" />
@@ -55,9 +53,22 @@ const LogoPDPro = () => (
   </svg>
 );
 
+// Helper Pemuatan Badge Kepatuhan Laporan agar Tampil Rapi & Terstandar [1]
+const renderBadge = (val: string) => {
+  if (!val) return '-';
+  const v = String(val);
+  const okSet = ['Selesai', 'Terlaksana', 'Aktif', 'Sesuai Standar', 'Lulus', 'Disetujui', 'Dijalankan', 'Kompeten', 'Paham'];
+  const warnSet = ['Proses', 'Direncanakan', 'Dalam kajian', 'Sedang', 'Cukup', 'Berjalan', 'Diajukan', 'Draft', 'Terjadwal', 'Dalam Pemantauan'];
+  const badSet = ['Belum', 'Nonaktif', 'Dibatalkan', 'Perlu Perbaikan', 'Tinggi', 'Remedial', 'Ditolak', 'Kedaluwarsa', 'Gagal (Tindak Lanjut HR)', 'Resign'];
+  
+  if (okSet.includes(v)) return <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 rounded-full font-bold text-[9px]">{v}</span>;
+  if (warnSet.includes(v)) return <span className="px-2.5 py-0.5 bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-500 rounded-full font-bold text-[9px]">{v}</span>;
+  if (badSet.includes(v)) return <span className="px-2.5 py-0.5 bg-brand-red/10 text-brand-red rounded-full font-bold text-[9px]">{v}</span>;
+  return v;
+};
+
 // =========================================================
 // UNIFIED DYNAMIC CRUD ENGINE SCHEMA DEFINITION [1]
-// (FUNGSI ANGGARAN DISKIP / DISEMBUNYIKAN SECARA TOTAL)
 // =========================================================
 const ENTITY_CONFIGS: Record<string, {
   table: string;
@@ -266,6 +277,19 @@ const ENTITY_CONFIGS: Record<string, {
       { name: 'catatan_mentor', label: 'Catatan Mentor', type: 'textarea' }
     ],
     columns: ['kru_id', 'tanggal_mulai', 'tahap_onboarding', 'status_checklist']
+  },
+  budget: {
+    table: 'pd_budget_cost',
+    title: 'Training Budget & Cost Tracker',
+    desc: 'Audit efisiensi anggaran dan realisasi biaya program pelatihan.',
+    selectQuery: '*, outlets!outlet_id(nama_outlet)',
+    fields: [
+      { name: 'topik_training', label: 'Topik Pelatihan', type: 'text' },
+      { name: 'anggaran', label: 'Anggaran Dialokasikan', type: 'number' },
+      { name: 'realisasi', label: 'Realisasi Biaya', type: 'number' },
+      { name: 'catatan_pengeluaran', label: 'Catatan Pengeluaran', type: 'textarea' }
+    ],
+    columns: ['topik_training', 'anggaran', 'realisasi', 'selisih']
   },
   pip: {
     table: 'pd_pip_log',
@@ -479,8 +503,8 @@ export default function UnifiedDashboardPage() {
     try {
       const { data: ot } = await supabase.from('outlets').select('*').order('nama_outlet');
       const { data: kr } = await supabase.from('kru').select('*, outlets!outlet_id(nama_outlet)').order('nama_kru');
-      const { data: sp } = await supabase.from('bank_sop').select('*').eq('status_aktif', true).order('judul_sop');
-      const { data: sl } = await supabase.from('bank_soal').select('*').eq('status_aktif', true);
+      const { data: sp = [] } = await supabase.from('bank_sop').select('*').eq('status_aktif', true).order('judul_sop');
+      const { data: sl = [] } = await supabase.from('bank_soal').select('*').eq('status_aktif', true);
 
       setOutlets(ot || []);
       setKruList(kr || []);
@@ -599,6 +623,40 @@ export default function UnifiedDashboardPage() {
       loadDynamicRows(activeTab);
     }
   }, [activeTab]);
+
+  // Memuat Profil Kru 360 saat Dropdown Dipilih
+  useEffect(() => {
+    if (!profileKruId) return;
+    const fetchProfil = async () => {
+      setProfileLoading(true);
+      try {
+        const { data: prof } = await supabase.from('kru').select('*, outlets!outlet_id(nama_outlet)').eq('id', profileKruId).single();
+        setProfileKruData(prof);
+
+        const { data: obs } = await supabase.from('observasi_lapangan').select('*').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+        const { data: coa } = await supabase.from('coaching_log').select('*').eq('kru_id', profileKruId).order('tanggal', { ascending: false });
+        const { data: gap } = await supabase.from('gap_analysis').select('*').eq('kru_id', profileKruId);
+        const { data: teo } = await supabase.from('penilaian_teori').select('*').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+        const { data: pra } = await supabase.from('penilaian_praktik').select('*, bank_sop(judul_sop)').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+        const { data: lis = [] } = await supabase.from('penilaian_lisan').select('*, bank_sop(judul_sop)').eq('kru_id', profileKruId).order('created_at', { ascending: false });
+
+        setProfileHistory({ observasi: obs || [], coaching: coa || [], gap: gap || [], teori: teo || [], praktik: pra || [], lisan: lis || [] });
+
+        const sesuaiCount = (obs || []).filter(o => o.hasil === 'Sesuai Standar').length;
+        setProfileMetrics({
+          bci: (obs || []).length ? Math.round((sesuaiCount / (obs || []).length) * 100) : null,
+          avgTeori: (teo || []).length ? Math.round((teo || []).reduce((a,b)=>a+Number(b.skor),0)/(teo || []).length) : null,
+          avgPraktik: (pra || []).length ? Number(((pra || []).reduce((a,b)=>a+Number(b.skor_total),0)/(pra || []).length).toFixed(2)) : null,
+          avgLisan: (lis || []).length ? Math.round((lis || []).reduce((a,b)=>a+Number(b.persentase_paham),0)/(lis || []).length) : null,
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    fetchProfil();
+  }, [profileKruId]);
 
   // =========================================================
   // SISTEM SINKRONISASI LOGIKA DETIL KRU (AUTO-POPULATE) [1]
@@ -1026,6 +1084,7 @@ export default function UnifiedDashboardPage() {
                 { key: 'evaluasi_reaksi', label: '📋 Evaluasi L1' },
                 { key: 'pre_post', label: '📊 Pre/Post Test' },
                 { key: 'onboarding', label: '🚀 Onboarding' },
+                { key: 'budget', label: '💰 Budget Training' },
                 { key: 'pip', label: '⚖️ PIP Kinerja' },
                 { key: 'kamus', label: '📖 Kamus Kompetensi' },
                 { key: 'audit', label: '🔍 Audit Operasional' },
@@ -1121,7 +1180,7 @@ export default function UnifiedDashboardPage() {
               HK
             </div>
             <div>
-              <p className="text-xs font-bold leading-none">{user ? user.raw_user_meta_data?.nama || 'Karyawan Hara' : 'Staff Hara'}</p>
+              <p className="text-xs font-bold leading-none">{user ? user.nama : 'Staff Hara'}</p>
               <p className="text-[10px] opacity-60">People Dev</p>
             </div>
           </div>
@@ -1166,7 +1225,7 @@ export default function UnifiedDashboardPage() {
                 <div className="relative overflow-hidden bg-gradient-to-r from-brand-red-dark via-brand-red to-[#D9583F] p-6 md:p-8 rounded-2xl text-white shadow-xl flex flex-col md:flex-row justify-between items-center animate-gradient-shift">
                   <div className="space-y-2 z-10 text-center md:text-left max-w-lg">
                     <p className="text-[10px] font-black uppercase tracking-widest text-brand-yellow">HARA-PD SYSTEM PRO</p>
-                    <h1 className="text-xl md:text-2xl font-black">Selamat Datang, {user ? user.raw_user_meta_data?.nama || 'Karyawan Hara' : 'Staff Hara'} 👋</h1>
+                    <h1 className="text-xl md:text-2xl font-black">Selamat Datang, {user ? user.nama : 'Staff Hara'} 👋</h1>
                     <p className="text-xs text-white/90 leading-relaxed">
                       Sistem evaluasi pengembangan terstruktur. Pantau seluruh progresi pelatihan mandiri, audit lapangan, dan kesenjangan kompetensi tim.
                     </p>
@@ -1420,7 +1479,7 @@ export default function UnifiedDashboardPage() {
                                     ? (row.outlets?.nama_outlet || '-')
                                     : col === 'created_at' || col === 'tanggal_pelaksanaan' || col === 'tanggal' || col === 'tanggal_mulai_pip' || col === 'tanggal_terbit' || col === 'tanggal_kedaluwarsa' || col === 'tanggal_pemberian' || col === 'tanggal_audit'
                                       ? (row[col] ? new Date(row[col]).toLocaleDateString('id-ID') : '-')
-                                      : String(row[col] ?? '-')
+                                      : renderBadge(row[col])
                                 }
                               </td>
                             ))}
@@ -1719,7 +1778,7 @@ export default function UnifiedDashboardPage() {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {settingsList.map((set, idx) => (
-                      <div key={idx} className="p-3.5 bg-brand-bg dark:bg-dark-bg/60 border border-brand-border/40 rounded-xl space-y-1.5">
+                      <div key={idx} className="p-3.5 bg-brand-bg dark:bg-dark-bg/60 border border-brand-border/40 rounded-xl space-y-1.5 animate-pop-in">
                         <label className="block text-[9px] font-black text-brand-red-dark dark:text-brand-yellow uppercase tracking-wider">{set.key.replace(/_/g, ' ')}</label>
                         <input 
                           type="text"
@@ -1808,7 +1867,7 @@ export default function UnifiedDashboardPage() {
                         <textarea 
                           value={formData[field.name] || ''}
                           onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink font-semibold"
                           rows={3}
                           required
                         />
@@ -1818,7 +1877,7 @@ export default function UnifiedDashboardPage() {
                         <select 
                           value={formData[field.name] || ''}
                           onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink font-semibold"
                         >
                           {field.options.map(opt => <option key={opt}>{opt}</option>)}
                         </select>
@@ -1829,7 +1888,7 @@ export default function UnifiedDashboardPage() {
                         <select 
                           value={formData.outlet_id || ''}
                           onChange={(e) => setFormData({...formData, outlet_id: e.target.value})}
-                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink"
+                          className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg text-brand-ink dark:text-dark-ink font-semibold"
                           required
                         >
                           <option value="">-- Pilih Outlet --</option>
