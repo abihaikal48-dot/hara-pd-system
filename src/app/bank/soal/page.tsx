@@ -95,7 +95,7 @@ export default function BankSoalEditorPage() {
         .update({
           pertanyaan: soal.pertanyaan,
           opsi_a: soal.opsi_a,
-          opsi_b: soar.opsi_b,
+          opsi_b: soal.opsi_b, // PERBAIKAN PENTING: Mengubah 'soar' menjadi 'soal' [1]
           opsi_c: soal.opsi_c,
           opsi_d: soal.opsi_d,
           kunci_jawaban: soal.kunci_jawaban,
