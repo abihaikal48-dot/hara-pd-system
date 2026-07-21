@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -15,7 +14,7 @@ import {
   Edit2, Trash2, Search, Loader2, CheckCircle2, Info, Download, Printer,
   UserCheck, Users, Play, Check, Shield, Flame, BookmarkCheck, CalendarDays,
   History, UsersRound, HelpCircle as HelpIcon, FileSpreadsheet, RefreshCw,
-  Activity, AlertCircle, Sparkles, LifeBuoy, ClipboardCheck
+  Activity, AlertCircle, Sparkles, LifeBuoy, ClipboardCheck, Bot, Wrench, XCircle
 } from 'lucide-react';
 
 const AVATAR_COLORS = ['#C0392B', '#F4B400', '#8E2A1F', '#E67E22', '#2E86AB', '#6C3483', '#16A085'];
@@ -464,21 +463,118 @@ export default function UnifiedDashboardPage() {
   const [savingSettings, setSavingSettings] = useState(false);
 
   // =========================================================
-  // FUNGSI PEMBANTU UTAMA (DISEJAJARKAN DI ATAS AGAR BEBAS ERROR)
+  // SISTEM KECERDASAN BUATAN (AI OPERATIONAL ASSISTANT ENGINE) [1]
   // =========================================================
-  const toggleDarkMode = () => {
-    const root = document.documentElement;
-    if (darkMode) {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setDarkMode(false);
-    } else {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setDarkMode(true);
-    }
+  const [aiInput, setAiInput] = useState('');
+  const [aiOutput, setAiOutput] = useState<{
+    status: boolean;
+    diagnostik: string;
+    sop_kode: string;
+    langkah: string[];
+    saran: string;
+  } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleAIDiagnostics = () => {
+    if (!aiInput.trim()) return;
+    setAiLoading(true);
+    
+    setTimeout(() => {
+      const q = aiInput.toLowerCase();
+      let match = {
+        status: true,
+        diagnostik: "Deteksi Kepatuhan Umum Operasional",
+        sop_kode: "SOP-SNT-01",
+        langkah: [
+          "Lakukan investigasi langsung ke lapangan bersama Kepala/Kapten Outlet.",
+          "Gelar re-training mendadak untuk menyelaraskan pemahaman SOP terkait.",
+          "Pantau kepatuhan kerja kru selama 7 hari berturut-turut pasca intervensi bimbingan."
+        ],
+        saran: "Gunakan modul evaluasi kuis teori mandiri tanpa login (/ujian) untuk menilai kembali pemahaman kognitif kru secara cepat."
+      };
+
+      if (q.includes('nasi') || q.includes('rice') || q.includes('lembek') || q.includes('keras')) {
+        match = {
+          status: true,
+          diagnostik: "Kesenjangan Proses Menanak Nasi (Dapur)",
+          sop_kode: "SOP-KIT-01",
+          langkah: [
+            "Pastikan takaran cup beras Miyako dan air selalu konsisten (3:4, 4:5, 5:6, atau 6:8).",
+            "Wajib diamkan nasi selama 15 menit setelah tombol Cook kembali ke atas agar nasi tanak.",
+            "Dilarang membiarkan nasi di dalam rice cooker lebih dari 30 menit (pindahkan ke magicom)."
+          ],
+          saran: "Segera gelar bimbingan singkat dan berikan sanksi denda pemotongan gaji Rp20.000 jika kesalahan ini berulang akibat kelalaian kru (Lampiran 1 Tata Tertib)."
+        };
+      } else if (q.includes('tepung') || q.includes('dusting') || q.includes('garing') || q.includes('keriting')) {
+        match = {
+          status: true,
+          diagnostik: "Kesenjangan Teknik Penepungan / Dusting Ayam",
+          sop_kode: "SOP-KIT-02",
+          langkah: [
+            "Pastikan teknik penepungan dilakukan 2 kali dusting dan dicubit perlahan (bukan ditekan erat).",
+            "Ketuk perlahan sisa tepung sebelum dimasukkan ke deep fryer agar minyak tidak cepat kotor.",
+            "Wajib ganti air celupan dengan yang baru setiap kali pergantian shift kerja."
+          ],
+          saran: "Lakukan audit BCI berkala dan jadwalkan evaluasi ujian kuis kognitif mandiri melalui tautan eksternal."
+        };
+      } else if (q.includes('asin') || q.includes('sambal') || q.includes('bawang') || q.includes('keasinan')) {
+        match = {
+          status: true,
+          diagnostik: "Penyimpangan Cita Rasa Resep Sambal Bawang",
+          sop_kode: "SOP-KIT-12",
+          langkah: [
+            "Wajib timbang berat cabai rawit merah pas 150 gr dan bawang putih pas 35 gr menggunakan timbangan digital.",
+            "Gunakan takaran mix garam pas 7 gr menggunakan sendok ukur khusus hara.",
+            "Dilarang menguleg bahan menggunakan mesin blender (wajib diuleg manual)."
+          ],
+          saran: "Lakukan kroscek kualitas bahan baku di dalam showcase dan jalankan uji kognitif kuis resep bagi kru Geprek."
+        };
+      } else if (q.includes('senyum') || q.includes('kasir') || q.includes('ramah') || q.includes('jutek') || q.includes('greeting')) {
+        match = {
+          status: true,
+          diagnostik: "Penyimpangan Standar Etika & Pelayanan Kasir",
+          sop_kode: "SOP-KAS-01",
+          langkah: [
+            "Wajib sapa pelanggan dengan senyuman ramah: 'Mari silahkan kak, dine-in atau take-away?'",
+            "Lakukan upselling menu bundling promo aktif dan cross-selling menu extra.",
+            "Kasir dilarang meninggalkan area kasir, dilarang duduk, dan dilarang bermain HP saat ada pelanggan."
+          ],
+          saran: "Lakukan sesi percakapan Coaching model GROW bersama kru kasir bersangkutan untuk mencari hambatan personal."
+        };
+      } else if (q.includes('genset') || q.includes('mati lampu') || q.includes('listrik')) {
+        match = {
+          status: true,
+          diagnostik: "Kesiapsiagaan Darurat & Pengoperasian Genset",
+          sop_kode: "SOP-HLP-07",
+          langkah: [
+            "Matikan sekring utama listrik PLN outlet terlebih dahulu sebelum menghidupkan genset.",
+            "Pastikan bensin genset terisi minimal 2 liter dan kran bensin mengarah ke bawah.",
+            "Panasi mesin genset selama 15 menit sebelum menyalakan saklar daya utama ke posisi ON."
+          ],
+          saran: "Jadwalkan pemanasan mesin genset secara rutin setiap 1 minggu sekali oleh tim Helper."
+        };
+      } else if (q.includes('komplain') || q.includes('salah pesanan') || q.includes('basi')) {
+        match = {
+          status: true,
+          diagnostik: "Protokol Penanganan Keluhan Pelanggan Tipe A",
+          sop_kode: "SOP-KLA-01",
+          langkah: [
+            "Terima keluhan pelanggan dengan sikap sabar, tenang, dan tersenyum tulus.",
+            "Minta maaf dengan santun: 'Mohon maaf atas kesalahan kami Kak. Mohon ditunggu sebentar ya pesanan segera diganti.'",
+            "Tarik produk yang dikomplain, sajikan porsi baru yang segar secepatnya."
+          ],
+          saran: "Catat kronologi kejadian secara tertib di kartu penanganan keluhan dan simpan di database."
+        };
+      }
+
+      setAiOutput(match);
+      setAiLoading(false);
+    }, 1500);
   };
 
+  // =========================================================
+  // FUNGSI PEMBANTU UTAMA (DISEJAJARKAN DI ATAS AGAR BEBAS ERROR)
+  // =========================================================
   const setScoreForStep = (idx: number, score: number) => {
     setStepScores(prev => ({ ...prev, [idx]: score }));
   };
@@ -646,10 +742,29 @@ export default function UnifiedDashboardPage() {
         const sesuaiCount = (obs || []).filter(o => o.hasil === 'Sesuai Standar').length;
         setProfileMetrics({
           bci: (obs || []).length ? Math.round((sesuaiCount / (obs || []).length) * 100) : null,
-          avgTeori: (teo || []).length ? Math.round((teo || []).reduce((a,b)=>a+Number(b.skor),0)/(teo || []).length) : null,
-          avgPraktik: (pra || []).length ? Number(((pra || []).reduce((a,b)=>a+Number(b.skor_total),0)/(pra || []).length).toFixed(2)) : null,
-          avgLisan: (lis || []).length ? Math.round((lis || []).reduce((a,b)=>a+Number(b.persentase_paham),0)/(lis || []).length) : null,
+          avgTeori: (teo || []).length ? Math.round((teo || []).reduce((a, b) => a + Number(b.skor), 0) / (teo || []).length) : null,
+          avgPraktik: (pra || []).length ? Number(((pra || []).reduce((a, b) => a + Number(b.skor_total), 0) / (pra || []).length).toFixed(2)) : null,
+          avgLisan: (lis || []).length ? Math.round((lis || []).reduce((a, b) => a + Number(b.persentase_paham), 0) / (lis || []).length) : null,
         });
+
+        // Olah SOP Sudah & Belum Dikuasai secara Objektif [1]
+        const sops = bankSop.filter(s => s.divisi === prof.divisi);
+        const mastered: any[] = [];
+        const unmastered: any[] = [];
+
+        (sops || []).forEach(s => {
+          const hasPraktik = (pra || []).find(p => p.sop_id === s.id && Number(p.skor_total) >= 2.5);
+          const hasLisan = (lis || []).find(l => l.sop_id === s.id && Number(l.persentase_paham) >= 80);
+
+          if (hasPraktik || hasLisan) {
+            mastered.push(s);
+          } else {
+            unmastered.push(s);
+          }
+        });
+
+        setSopMastery({ mastered, unmastered });
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -657,7 +772,13 @@ export default function UnifiedDashboardPage() {
       }
     };
     fetchProfil();
-  }, [profileKruId]);
+  }, [profileKruId, bankSop]);
+
+  // State Pemetaan Kompetensi SOP (Sudah & Belum Dikuasai) [1]
+  const [sopMastery, setSopMastery] = useState<{ mastered: any[]; unmastered: any[] }>({
+    mastered: [],
+    unmastered: []
+  });
 
   // =========================================================
   // SISTEM SINKRONISASI LOGIKA DETIL KRU (AUTO-POPULATE) [1]
@@ -1712,6 +1833,23 @@ export default function UnifiedDashboardPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* SINOPSIS SINKRONISASI PENGUASAAN SOP DI PROFIL 360 [1] */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100">
+                        <h4 className="font-bold text-emerald-700 mb-2 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> SOP yang Sudah Dikuasai ({sopMastery.mastered.length})</h4>
+                        <ul className="space-y-1 max-h-[120px] overflow-y-auto">
+                          {sopMastery.mastered.map(s => <li key={s.id}><b>{s.kode_sop}</b>: {s.judul_sop}</li>)}
+                        </ul>
+                      </div>
+                      <div className="p-4 bg-brand-red/5 rounded-xl border border-brand-red/10">
+                        <h4 className="font-bold text-brand-red-dark mb-2 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> SOP yang Belum Dikuasai ({sopMastery.unmastered.length})</h4>
+                        <ul className="space-y-1 max-h-[120px] overflow-y-auto">
+                          {sopMastery.unmastered.map(s => <li key={s.id}><b>{s.kode_sop}</b>: {s.judul_sop}</li>)}
+                        </ul>
+                      </div>
+                    </div>
+
                   </div>
                 )}
               </div>
@@ -1828,11 +1966,76 @@ export default function UnifiedDashboardPage() {
               </div>
             )}
 
+            {/* ===== 10. TAB BARU: ASISTEN KECERDASAN BUATAN (AI SOLVER) ===== */}
+            {activeTab === 'ai_assistant' && (
+              <div className="bg-white dark:bg-dark-card p-5 rounded-xl border border-brand-border animate-fade-slide-in space-y-5">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-brand-red animate-bounce" />
+                  <div>
+                    <h2 className="text-sm font-black text-brand-ink dark:text-dark-ink">Asisten AI Penanganan Masalah Outlet (SOP Expert)</h2>
+                    <p className="text-[10px] text-brand-muted">Ketik keluhan atau kendala di outlet, AI akan menyusun solusi taktis berdasarkan naskah SOP resmi.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <textarea 
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    placeholder="Contoh: Kru kasir tidak senyum saat ramai antrean atau bumbu sambal bawang sering terlalu asin..."
+                    className="w-full p-3 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    rows={3}
+                  />
+                  <button 
+                    onClick={handleAIDiagnostics}
+                    disabled={aiLoading}
+                    className="w-full bg-brand-red hover:bg-brand-red-dark text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md"
+                  >
+                    {aiLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Menganalisis Naskah SOP...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 text-brand-yellow" />
+                        <span>Jalankan Diagnostik AI</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Hasil Output AI */}
+                {aiOutput && (
+                  <div className="p-5 bg-brand-red/5 border border-brand-red/10 rounded-2xl space-y-4 animate-pop-in">
+                    <div className="flex justify-between items-start border-b border-brand-border/40 pb-2">
+                      <div>
+                        <span className="text-[10px] font-black text-brand-red uppercase tracking-wider">{aiOutput.diagnostik}</span>
+                        <h4 className="text-xs font-bold text-brand-ink dark:text-dark-ink mt-0.5">Saran Penanganan Taktis</h4>
+                      </div>
+                      <span className="px-2 py-0.5 bg-brand-yellow text-brand-red-dark rounded-md text-[9px] font-black uppercase tracking-wider">{aiOutput.sop_kode}</span>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      <p className="font-bold text-brand-ink dark:text-dark-ink flex items-center gap-1"><Wrench className="w-4 h-4 text-brand-red" /> Langkah Tindakan Teknis:</p>
+                      <ul className="space-y-1.5 list-disc pl-5 text-brand-muted leading-relaxed">
+                        {aiOutput.langkah.map((l, i) => <li key={i}>{l}</li>)}
+                      </ul>
+                    </div>
+
+                    <div className="p-3 bg-brand-bg dark:bg-dark-bg rounded-xl border border-brand-border text-xs leading-relaxed">
+                      <p className="font-bold text-brand-red-dark mb-1">Rekomendasi Tambahan PD:</p>
+                      <p className="text-brand-muted">{aiOutput.saran}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
         </main>
       </div>
 
-      {/* ===== UPGRADE MODAL POP-UP SESUAI TEMA GOLDEN-CRIMSON [1] ===== */}
+      {/* ===== CENTRALIZED GLASSMORPHIC MODAL DIALOG UNTUK SELURUH TAB PD ===== */}
       {isModalOpen && ENTITY_CONFIGS.hasOwnProperty(activeTab) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white dark:bg-dark-card rounded-2xl shadow-xl border border-brand-border dark:border-dark-border overflow-hidden animate-pop-in">
@@ -1982,3 +2185,4 @@ export default function UnifiedDashboardPage() {
     </div>
   );
 }
+
