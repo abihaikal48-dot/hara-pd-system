@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { 
   Loader2, Printer, CheckCircle2, Award, BookOpen, MessageSquare, 
-  TrendingUp, ShieldAlert, MapPin, User, Bookmark, Calendar, XCircle, HelpCircle
+  TrendingUp, ShieldAlert, MapPin, User, Bookmark, Calendar, AlertCircle
 } from 'lucide-react';
 
 export default function RaportKruPage() {
@@ -160,7 +160,7 @@ export default function RaportKruPage() {
         </button>
       </div>
 
-      {/* DOKUMEN RAPORT FISIK PORTRAIT A4 (SANGAT RAPI, TIDAK KEPOTONG KANAN-KIRI) */}
+      {/* DOKUMEN RAPORT FISIK PORTRAIT A4 (SANGAT RAPI, TIDAK KEPOTONG KANAN-KIRI) [1] */}
       <div className="w-full max-w-[800px] bg-white p-12 border border-brand-border space-y-6 print:shadow-none print:border-none print:p-2 print:max-w-full print:mx-0 relative">
         
         {/* KODE QR VERIFIKASI DIGITAL DI POJOK KANAN ATAS [1] */}
@@ -169,7 +169,7 @@ export default function RaportKruPage() {
             <img 
               src={`https://api.qrserver.com/v1/create-qr-code/?size=85x85&data=${encodeURIComponent(raportUrl)}`} 
               alt="Verifikasi Raport QR" 
-              className="w-20 h-28 border-2 border-brand-border p-1 bg-white rounded-lg shadow-sm"
+              className="w-20 h-20 border-2 border-brand-border p-1 bg-white rounded-lg shadow-sm"
             />
             <span className="block text-[8px] text-brand-muted font-bold uppercase tracking-wider">Verifikasi Live</span>
           </div>
@@ -262,9 +262,9 @@ export default function RaportKruPage() {
               <CheckCircle2 className="w-4 h-4" />
               <span>SOP yang Sudah Dikuasai</span>
             </h4>
-            <div className="space-y-1.5 divide-y divide-brand-border/40 max-h-[140px] overflow-y-auto">
+            <div className="space-y-1.5 divide-y divide-brand-border/40 max-h-[140px] overflow-y-auto pr-1">
               {sopMastery.mastered.length === 0 ? (
-                <p className="text-[10px] text-brand-muted italic py-2">Belum ada SOP berstatus lulus kualifikasi.</p>
+                <p className="text-[10px] text-brand-muted italic py-2">Belum ada SOP divisi yang lulus kualifikasi.</p>
               ) : (
                 sopMastery.mastered.map((s, idx) => (
                   <div key={idx} className="flex justify-between pt-1.5 first:pt-0">
@@ -282,7 +282,7 @@ export default function RaportKruPage() {
               <AlertCircle className="w-4 h-4" />
               <span>SOP Perlu Pelatihan / Evaluasi</span>
             </h4>
-            <div className="space-y-1.5 divide-y divide-brand-border/40 max-h-[140px] overflow-y-auto">
+            <div className="space-y-1.5 divide-y divide-brand-border/40 max-h-[140px] overflow-y-auto pr-1">
               {sopMastery.unmastered.length === 0 ? (
                 <p className="text-[10px] text-emerald-600 font-bold py-2">Luar biasa! Seluruh SOP divisi telah dikuasai seutuhnya.</p>
               ) : (
