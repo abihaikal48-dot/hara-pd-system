@@ -108,7 +108,7 @@ function CetakLaporanContent() {
       </div>
 
       {/* DOKUMEN LAPORAN FISIK PORTRAIT A4 (SANGAT RAPI, TIDAK KEPOTONG KANAN-KIRI) [1] */}
-      <div className="w-full max-w-[800px] bg-white p-12 border border-brand-border space-y-8 print:shadow-none print:border-none print:p-2 print:max-w-full print:mx-0">
+      <div className="w-[800px] bg-white p-12 border border-brand-border shadow-2xl space-y-8 print:shadow-none print:border-none print:p-2 print:max-w-full print:mx-0">
         
         {/* KOP SURAT RESMI DIVISI PEOPLE DEVELOPMENT - HARA CHICKEN [1] */}
         <div className="flex items-center justify-between border-b-4 border-brand-red-dark pb-5">
