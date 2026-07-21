@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Loader2, Printer, CheckCircle2, Award, BookOpen, MessageSquare, TrendingUp, ShieldAlert, MapPin, User, Bookmark, Calendar } from 'lucide-react';
+import { 
+  Loader2, Printer, CheckCircle2, Award, BookOpen, MessageSquare, 
+  TrendingUp, ShieldAlert, MapPin, User, Bookmark, Calendar, XCircle, HelpCircle
+} from 'lucide-react';
 
 export default function RaportKruPage() {
   const params = useParams();
@@ -11,6 +14,7 @@ export default function RaportKruPage() {
 
   const [kru, setKru] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [raportUrl, setRaportUrl] = useState('');
 
   // State Riwayat Nilai
   const [history, setHistory] = useState<Record<string, any[]>>({
@@ -29,6 +33,18 @@ export default function RaportKruPage() {
     avgLisan: null
   });
 
+  // State Pemetaan Kompetensi SOP (Sudah & Belum Dikuasai) [1]
+  const [sopMastery, setSopMastery] = useState<{ mastered: any[]; unmastered: any[] }>({
+    mastered: [],
+    unmastered: []
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && id) {
+      setRaportUrl(`${window.location.origin}/profil/raport/${id}`);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (!id) return;
 
@@ -45,12 +61,15 @@ export default function RaportKruPage() {
 
         if (profile) {
           // 2. Ambil Seluruh Riwayat Nilai Terkait
-          const { data: obs } = await supabase.from('observasi_lapangan').select('*').eq('kru_id', id).order('created_at', { ascending: false });
+          const { data: obs } = await supabase.from('observasi_lapangan').select('*').eq('kru_id', id);
           const { data: coa } = await supabase.from('coaching_log').select('*').eq('kru_id', id).order('tanggal', { ascending: false });
           const { data: gap } = await supabase.from('gap_analysis').select('*').eq('kru_id', id);
           const { data: teo } = await supabase.from('penilaian_teori').select('*').eq('kru_id', id).order('created_at', { ascending: false });
           const { data: pra } = await supabase.from('penilaian_praktik').select('*, bank_sop(judul_sop)').eq('kru_id', id).order('created_at', { ascending: false });
           const { data: lis } = await supabase.from('penilaian_lisan').select('*, bank_sop(judul_sop)').eq('kru_id', id).order('created_at', { ascending: false });
+
+          // 3. Ambil Seluruh SOP Divisi Terkait yang Aktif untuk Dibandingkan secara Objektif [1]
+          const { data: sops } = await supabase.from('bank_sop').select('*').eq('divisi', profile.divisi).eq('status_aktif', true);
 
           setHistory({
             observasi: obs || [],
@@ -61,7 +80,7 @@ export default function RaportKruPage() {
             lisan: lis || []
           });
 
-          // 3. Kalkulasi Metrik Rata-Rata
+          // 4. Kalkulasi Metrik Rata-Rata Kepatuhan
           const sesuaiCount = (obs || []).filter(o => o.hasil === 'Sesuai Standar').length;
           const bciCalc = (obs || []).length ? Math.round((sesuaiCount / (obs || []).length) * 100) : null;
 
@@ -75,6 +94,23 @@ export default function RaportKruPage() {
             avgPraktik: avgPra,
             avgLisan: avgLis
           });
+
+          // 5. Algoritma Pemetaan Penguasaan SOP Objektif (Skor Praktik >= 2.5 atau Lisan >= 80) [1]
+          const mastered: any[] = [];
+          const unmastered: any[] = [];
+
+          (sops || []).forEach(s => {
+            const hasPraktik = (pra || []).find(p => p.sop_id === s.id && Number(p.skor_total) >= 2.5);
+            const hasLisan = (lis || []).find(l => l.sop_id === s.id && Number(l.persentase_paham) >= 80);
+
+            if (hasPraktik || hasLisan) {
+              mastered.push(s);
+            } else {
+              unmastered.push(s);
+            }
+          });
+
+          setSopMastery({ mastered, unmastered });
         }
       } catch (err) {
         console.error('Gagal mengambil data raport kru', err);
@@ -124,9 +160,21 @@ export default function RaportKruPage() {
         </button>
       </div>
 
-      {/* DOKUMEN RAPORT FISIK PORTRAIT A4 (SANGAT RAPI, TIDAK KEPOTONG KANAN-KIRI) [1] */}
-      <div className="w-full max-w-[800px] bg-white p-12 border border-brand-border space-y-6 print:shadow-none print:border-none print:p-2 print:max-w-full print:mx-0">
+      {/* DOKUMEN RAPORT FISIK PORTRAIT A4 (SANGAT RAPI, TIDAK KEPOTONG KANAN-KIRI) */}
+      <div className="w-full max-w-[800px] bg-white p-12 border border-brand-border space-y-6 print:shadow-none print:border-none print:p-2 print:max-w-full print:mx-0 relative">
         
+        {/* KODE QR VERIFIKASI DIGITAL DI POJOK KANAN ATAS [1] */}
+        {raportUrl && (
+          <div className="absolute top-12 right-12 text-center space-y-1.5 print:top-4 print:right-4 z-20">
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=85x85&data=${encodeURIComponent(raportUrl)}`} 
+              alt="Verifikasi Raport QR" 
+              className="w-20 h-28 border-2 border-brand-border p-1 bg-white rounded-lg shadow-sm"
+            />
+            <span className="block text-[8px] text-brand-muted font-bold uppercase tracking-wider">Verifikasi Live</span>
+          </div>
+        )}
+
         {/* KOP SURAT RESMI PEOPLE DEVELOPMENT */}
         <div className="flex items-center justify-between border-b-4 border-brand-red-dark pb-5">
           <div className="flex items-center gap-4">
@@ -143,7 +191,7 @@ export default function RaportKruPage() {
               <p className="text-[9px] text-brand-muted mt-1 leading-none italic font-medium">"Membina Kompetensi, Memastikan Konsistensi, Menjaga Cita Rasa."</p>
             </div>
           </div>
-          <div className="text-right text-[9px] text-brand-muted leading-relaxed font-semibold">
+          <div className="text-right text-[9px] text-brand-muted leading-relaxed font-semibold pr-24">
             <p>Yogyakarta, Indonesia</p>
             <p>Email: recruitment_training_spv@haraChicken.com</p>
           </div>
@@ -205,43 +253,43 @@ export default function RaportKruPage() {
           </div>
         </div>
 
-        {/* RIWAYAT PENILAIAN SPESIFIK */}
-        <div className="grid grid-cols-2 gap-4 text-[11px] leading-relaxed">
+        {/* INTEGRASI PENERAPAN DETAIL TOPIK SOP YANG DIKUASAI & BELUM DIKUASAI [1] */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] leading-relaxed">
           
-          {/* Riwayat Teori & Kuis */}
-          <div className="p-4 border border-brand-border rounded-xl space-y-2">
-            <h4 className="font-extrabold text-brand-red-dark flex items-center gap-1.5 mb-2">
-              <BookOpen className="w-4 h-4" />
-              <span>Evaluasi Kognitif Kuis</span>
+          {/* SOP yang Sudah Dikuasai */}
+          <div className="p-4 border border-brand-border rounded-xl space-y-2 bg-emerald-50/20">
+            <h4 className="font-extrabold text-emerald-700 flex items-center gap-1.5 mb-2">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>SOP yang Sudah Dikuasai</span>
             </h4>
-            <div className="space-y-1.5 divide-y divide-brand-border/40">
-              {history.teori.length === 0 ? (
-                <p className="text-[10px] text-brand-muted italic py-2">Belum ada riwayat kuis teori.</p>
+            <div className="space-y-1.5 divide-y divide-brand-border/40 max-h-[140px] overflow-y-auto">
+              {sopMastery.mastered.length === 0 ? (
+                <p className="text-[10px] text-brand-muted italic py-2">Belum ada SOP berstatus lulus kualifikasi.</p>
               ) : (
-                history.teori.slice(0, 3).map((t, idx) => (
+                sopMastery.mastered.map((s, idx) => (
                   <div key={idx} className="flex justify-between pt-1.5 first:pt-0">
-                    <span>{t.topik}</span>
-                    <span className="font-bold text-brand-red">{t.skor}%</span>
+                    <span className="font-bold text-brand-ink">{s.kode_sop}</span>
+                    <span className="text-brand-muted truncate max-w-[160px]">{s.judul_sop}</span>
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          {/* Riwayat Praktik SOP */}
-          <div className="p-4 border border-brand-border rounded-xl space-y-2">
+          {/* SOP yang Belum Dikuasai / Perlu Evaluasi */}
+          <div className="p-4 border border-brand-border rounded-xl space-y-2 bg-brand-red/5">
             <h4 className="font-extrabold text-brand-red-dark flex items-center gap-1.5 mb-2">
-              <Award className="w-4 h-4" />
-              <span>Ceklis Praktik SOP</span>
+              <AlertCircle className="w-4 h-4" />
+              <span>SOP Perlu Pelatihan / Evaluasi</span>
             </h4>
-            <div className="space-y-1.5 divide-y divide-brand-border/40">
-              {history.praktik.length === 0 ? (
-                <p className="text-[10px] text-brand-muted italic py-2">Belum ada riwayat ujian praktik.</p>
+            <div className="space-y-1.5 divide-y divide-brand-border/40 max-h-[140px] overflow-y-auto">
+              {sopMastery.unmastered.length === 0 ? (
+                <p className="text-[10px] text-emerald-600 font-bold py-2">Luar biasa! Seluruh SOP divisi telah dikuasai seutuhnya.</p>
               ) : (
-                history.praktik.slice(0, 3).map((p, idx) => (
+                sopMastery.unmastered.map((s, idx) => (
                   <div key={idx} className="flex justify-between pt-1.5 first:pt-0">
-                    <span className="truncate max-w-[150px]">{p.bank_sop?.judul_sop || 'SOP Kerja'}</span>
-                    <span className="font-bold text-emerald-600">{p.skor_total}/3</span>
+                    <span className="font-bold text-brand-red">{s.kode_sop}</span>
+                    <span className="text-brand-muted truncate max-w-[160px]">{s.judul_sop}</span>
                   </div>
                 ))
               )}
