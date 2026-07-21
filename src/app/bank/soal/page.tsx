@@ -239,9 +239,7 @@ export default function BankSoalEditorPage() {
         </div>
 
         {/* Grid Kartu Editor Soal Visual */}
-        {loading ? (
-          <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-brand-muted" /></div>
-        ) : filteredSoal.length === 0 ? (
+        {filteredSoal.length === 0 ? (
           <p className="text-xs text-brand-muted text-center py-10">Tidak ada butir soal dalam topik ini.</p>
         ) : (
           <div className="space-y-4">
@@ -289,7 +287,8 @@ export default function BankSoalEditorPage() {
                         <label className="block text-[9px] font-bold text-brand-muted uppercase mb-1">Opsi {opt.toUpperCase()}</label>
                         <input 
                           type="text"
-                          value={soal[`opsi_${opt}` as keyof Soal] || ''}
+                          // PERBAIKAN UTAMA: Type Casting Dinamis dengan 'as string' untuk Menolak Kesalahan Boolean [1]
+                          value={(soal[`opsi_${opt}` as keyof Soal] as string) || ''}
                           onChange={(e) => handleFieldChange(soal.id, `opsi_${opt}` as keyof Soal, e.target.value)}
                           className="w-full p-2 text-xs bg-brand-bg dark:bg-dark-bg border border-brand-border rounded-lg"
                         />
